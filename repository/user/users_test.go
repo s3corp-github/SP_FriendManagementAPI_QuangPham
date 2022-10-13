@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"github.com/friendsofgo/errors"
 	models "github.com/quangpham789/golang-assessment/models"
 	"github.com/quangpham789/golang-assessment/utils/db"
 	"github.com/stretchr/testify/require"
@@ -29,9 +30,6 @@ func TestRepository_CreateUser(t *testing.T) {
 				IsActive: null.BoolFrom(true),
 			},
 		},
-		// TODO: "error duplicate email"
-
-		// TODO: "error duplicate primary_key"
 	}
 
 	for desc, tc := range tcs {
@@ -69,16 +67,17 @@ func TestRepository_GetUserByEmail(t *testing.T) {
 		expErr    error
 	}{
 		"success": {
-			input: "nhutquang23@gmail.com",
+			input: "andy@example.com",
 			expResult: models.User{
-				Email:    "nhutquang23@gmail.com",
+				Email:    "andy@example.com",
 				Phone:    null.StringFrom("123456"),
 				IsActive: null.BoolFrom(true),
 			},
 		},
-		// TODO: "error duplicate email"
-
-		// TODO: "error duplicate primary_key"
+		"email is empty": {
+			input:  "",
+			expErr: errors.New("Email cannot be empty"),
+		},
 	}
 
 	for desc, tc := range tcs {
@@ -90,8 +89,6 @@ func TestRepository_GetUserByEmail(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.users;")
-
-			// TODO: Load DB user test sql
 
 			userRepo := NewUserRepository(dbConn)
 			res, err := userRepo.GetUserByEmail(ctx, tc.input)
@@ -119,14 +116,11 @@ func TestRepository_GetUserByID(t *testing.T) {
 		"success": {
 			input: 3,
 			expResult: models.User{
-				Email:    "nhutquang23@gmail.com",
-				Phone:    null.StringFrom("0343450044"),
+				Email:    "common@example.com",
+				Phone:    null.StringFrom("123456"),
 				IsActive: null.BoolFrom(true),
 			},
 		},
-		// TODO: "error duplicate email"
-
-		// TODO: "error duplicate primary_key"
 	}
 
 	for desc, tc := range tcs {
@@ -149,6 +143,48 @@ func TestRepository_GetUserByID(t *testing.T) {
 				tc.expResult.ID = res.ID
 				tc.expResult.CreatedAt = res.CreatedAt
 				tc.expResult.UpdatedAt = res.UpdatedAt
+				require.NoError(t, err)
+				require.Equal(t, tc.expResult, res)
+			}
+		})
+	}
+
+}
+
+func TestRepository_GetUserIDsByEmail(t *testing.T) {
+	tcs := map[string]struct {
+		input     []string
+		expResult []int
+		expErr    error
+	}{
+		"success": {
+			input:     []string{"andy@example.com"},
+			expResult: []int{1},
+		},
+		"emails is null": {
+			input:  []string{},
+			expErr: errors.New("Slice of emails cannot empty"),
+		},
+	}
+
+	for desc, tc := range tcs {
+		t.Run(desc, func(t *testing.T) {
+			ctx := context.Background()
+			// Connect DB test
+			dbConn, err := db.ConnectDB(dbURL)
+			require.NoError(t, err)
+			defer dbConn.Close()
+			//defer dbConn.Exec("DELETE FROM public.users;")
+
+			// TODO: Load DB user test sql
+
+			userRepo := NewUserRepository(dbConn)
+			res, err := userRepo.GetUserIDsByEmail(ctx, tc.input)
+
+			if tc.expErr != nil {
+				require.EqualError(t, err, tc.expErr.Error())
+			} else {
+				tc.expResult = res
 				require.NoError(t, err)
 				require.Equal(t, tc.expResult, res)
 			}

@@ -20,12 +20,8 @@ func (m MockRelationRepo) GetRelationByIdsAndType(ctx context.Context, requester
 	return args.Get(0).(models.Relation), args.Error(1)
 }
 
-func (m MockRelationRepo) GetAllRelationFriendOfUser(ctx context.Context, requesterId int) (models.RelationSlice, error) {
-	args := m.Called(ctx, requesterId)
-	return args.Get(0).(models.RelationSlice), args.Error(1)
-}
-
-func (m MockRelationRepo) GetCommonFriend(ctx context.Context, firstRequesterId int, secondRequesterId int) (models.RelationSlice, error) {
-	args := m.Called(ctx, firstRequesterId, secondRequesterId)
-	return args.Get(0).(models.RelationSlice), args.Error(1)
+func (m MockRelationRepo) GetRelationFriendIDsOfUser(ctx context.Context, requesterId int) ([]int, error) {
+	//args := m.Called(ctx, requesterId)
+	//return args.Get(0).(models.UserSlice.), args.Error(1)
+	panic("To implement")
 }

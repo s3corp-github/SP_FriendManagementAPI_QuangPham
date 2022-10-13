@@ -11,22 +11,20 @@ type UserRepo interface {
 	GetUserByID(ctx context.Context, id int) (models.User, error)
 
 	GetUserByEmail(ctx context.Context, email string) (models.User, error)
+
+	GetUserIDsByEmail(ctx context.Context, email []string) ([]int, error)
+
+	GetListEmailByIDs(ctx context.Context, ids []int) ([]string, error)
 }
 
 type RelationsRepo interface {
 	CreateRelation(ctx context.Context, input models.Relation) (bool, error)
 
-	GetRelationByIdsAndType(ctx context.Context, requesterId int, addresseeId int, relationType int) (models.Relation, error)
+	IsRelationExist(ctx context.Context, requesterId int, addresseeId int, relationType int) (bool, error)
 
-	GetAllRelationFriendOfUser(ctx context.Context, requesterId int) (models.RelationSlice, error)
+	GetRelationIDsOfUser(ctx context.Context, requesterId int, relationType int) ([]int, error)
 
-	GetCommonFriend(ctx context.Context, firstRequesterId int, secondRequesterId int) (models.RelationSlice, error)
-}
+	GetRequesterIDRelation(ctx context.Context, requesterId int, relationType int) ([]int, error)
 
-type MockUserRepo interface {
-	CreateUser(ctx context.Context, user models.User) (models.User, error)
-
-	GetUserByID(ctx context.Context, id int) (*models.User, error)
-
-	GetUserByEmail(ctx context.Context, email string) (models.User, error)
+	DeleteRelation(ctx context.Context, requesterId int, addresseeId int, relationType int) error
 }

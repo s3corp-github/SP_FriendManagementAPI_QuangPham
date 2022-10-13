@@ -3,11 +3,12 @@ package relation
 import (
 	"context"
 	"database/sql"
+	"github.com/friendsofgo/errors"
 	models "github.com/quangpham789/golang-assessment/models"
 	"github.com/quangpham789/golang-assessment/repository"
 	"github.com/quangpham789/golang-assessment/utils"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"log"
 )
@@ -22,54 +23,44 @@ func NewRelationsRepository(db *sql.DB) repository.RelationsRepo {
 	}
 }
 
-func (repo relationsRepository) GetCommonFriend(ctx context.Context, firstRequesterId int, secondRequesterId int) (models.RelationSlice, error) {
-	var friendRelations models.RelationSlice
-	err := queries.Raw(
-		`SELECT r.addressee_email AS addressee_email, r.requester_email AS requester_email
-					FROM
-					relations r
-					INNER JOIN (
-						SELECT
-							r1.addressee_email AS addressee_email,
-							r1.requester_email AS requester_email
-						FROM
-							relations r1
-						WHERE
-							r1.requester_id = $1 AND r1.relation_type = 1) AS t1 ON t1.addressee_email = r.addressee_email
-				WHERE
-					r.requester_id = $2 AND r.relation_type = 1`, secondRequesterId, firstRequesterId).Bind(ctx, repo.connection, &friendRelations)
+func (repo relationsRepository) IsRelationExist(ctx context.Context, requesterId int, addresseeId int, relationType int) (bool, error) {
+	if requesterId == 0 {
+		return false, errors.New("requesterId cannot be null")
+	}
+	if addresseeId == 0 {
+		return false, errors.New("addresseeId cannot be null")
+	}
+	if relationType == 0 {
+		return false, errors.New("relationType cannot be null")
+	}
+	//relation is two-way relationship
+	if relationType == utils.FriendRelation {
+
+		isExists, err := models.Relations(
+			models.RelationWhere.RelationType.EQ(null.IntFrom(relationType)),
+			models.RelationWhere.RequesterID.EQ(addresseeId),
+			models.RelationWhere.AddresseeID.EQ(requesterId),
+		).Exists(ctx, repo.connection)
+
+		if err != nil {
+			return false, err
+		}
+
+		if isExists == true {
+			return true, nil
+		}
+	}
+	isExists, err := models.Relations(
+		models.RelationWhere.RelationType.EQ(null.IntFrom(relationType)),
+		models.RelationWhere.RequesterID.EQ(requesterId),
+		models.RelationWhere.AddresseeID.EQ(addresseeId),
+	).Exists(ctx, repo.connection)
+
 	if err != nil {
-		log.Println("GetAllRelationFriendOfTwoEmail error when get all friends of user", err)
-		return nil, err
+		return false, err
 	}
-	return friendRelations, nil
 
-}
-
-func (repo relationsRepository) GetAllRelationFriendOfUser(ctx context.Context, requesterId int) (models.RelationSlice, error) {
-	var qms []qm.QueryMod
-	//qms = append(qms, qm.Where(models.RelationColumns.RequesterID+" = ? OR "+models.RelationColumns.AddresseeID+" = ?", requesterId, requesterId))
-	qms = append(qms, qm.Where(models.RelationColumns.RequesterID+" = ?", requesterId))
-	qms = append(qms, qm.Where(models.RelationColumns.RelationType+" = ?", utils.FriendRelation))
-
-	friendRelations, err := models.Relations(qms...).All(ctx, repo.connection)
-	if err != nil {
-		log.Println("GetAllRelationFriendOfUser error when get all friends of user", err)
-		return nil, err
-	}
-	return friendRelations, nil
-}
-
-func (repo relationsRepository) GetRelationByIdsAndType(ctx context.Context, requesterId int, addresseeId int, relationType int) (models.Relation, error) {
-	var relationResult models.Relation
-	var qms []qm.QueryMod
-	qms = append(qms, qm.Where(models.RelationColumns.RequesterID+" = ?", requesterId))
-	qms = append(qms, qm.Where(models.RelationColumns.AddresseeID+" = ?", addresseeId))
-	qms = append(qms, qm.Where(models.RelationColumns.RelationType+" = ?", relationType))
-	if err := models.Relations(qms...).Bind(ctx, repo.connection, &relationResult); err != nil {
-		return models.Relation{}, err
-	}
-	return relationResult, nil
+	return isExists, nil
 }
 
 func (repo relationsRepository) CreateRelation(ctx context.Context, input models.Relation) (bool, error) {
@@ -83,4 +74,86 @@ func (repo relationsRepository) CreateRelation(ctx context.Context, input models
 		return false, err
 	}
 	return true, nil
+}
+
+func (repo relationsRepository) GetRelationIDsOfUser(ctx context.Context, requesterId int, relationType int) ([]int, error) {
+	if requesterId == 0 {
+		return nil, errors.New("requesterId cannot be null")
+	}
+	if relationType == 0 {
+		return nil, errors.New("relationType cannot be null")
+	}
+	var qms []qm.QueryMod
+	qms = append(qms, qm.Where(models.RelationColumns.RequesterID+" = ? OR "+models.RelationColumns.AddresseeID+" = ?", requesterId, requesterId))
+	qms = append(qms, qm.Where(models.RelationColumns.RelationType+" = ?", relationType))
+
+	friendRelations, err := models.Relations(qms...).All(ctx, repo.connection)
+	if err != nil {
+		log.Println("GetRelationIDsOfUser error when get all friends of user", err)
+		return nil, err
+	}
+
+	userIDs := make([]int, len(friendRelations))
+
+	for idx, o := range friendRelations {
+		if o.RequesterID != requesterId {
+			userIDs[idx] = o.RequesterID
+		} else {
+			userIDs[idx] = o.AddresseeID
+		}
+	}
+
+	return userIDs, nil
+}
+func (repo relationsRepository) DeleteRelation(ctx context.Context, requesterId int, addresseeId int, relationType int) error {
+	if requesterId == 0 {
+		return errors.New("requesterId cannot be null")
+	}
+	if addresseeId == 0 {
+		return errors.New("addresseeId cannot be null")
+	}
+	if relationType == 0 {
+		return errors.New("relationType cannot be null")
+	}
+	_, err := models.Relations(
+		models.RelationWhere.RelationType.EQ(null.IntFrom(relationType)),
+		models.RelationWhere.RequesterID.EQ(requesterId),
+		models.RelationWhere.AddresseeID.EQ(addresseeId),
+	).DeleteAll(ctx, repo.connection)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo relationsRepository) GetRequesterIDRelation(ctx context.Context, requesterId int, relationType int) ([]int, error) {
+	if requesterId == 0 {
+		return nil, errors.New("requesterId cannot be null")
+	}
+	if relationType == 0 {
+		return nil, errors.New("relationType cannot be null")
+	}
+	var qms []qm.QueryMod
+	qms = append(qms, qm.Where(models.RelationColumns.RequesterID+" = ? ", requesterId))
+	qms = append(qms, qm.Where(models.RelationColumns.RelationType+" = ?", relationType))
+
+	friendRelations, err := models.Relations(qms...).All(ctx, repo.connection)
+	if err != nil {
+		log.Println("GetRequesterSubRelation error when get all friends of user", err)
+		return nil, err
+	}
+
+	userIDs := make([]int, len(friendRelations))
+
+	for idx, o := range friendRelations {
+		if o.RequesterID != requesterId {
+			userIDs[idx] = o.RequesterID
+		} else {
+			userIDs[idx] = o.AddresseeID
+		}
+	}
+
+	return userIDs, nil
 }

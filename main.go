@@ -51,9 +51,12 @@ func userRouter(userHandler handler.UserHandler) http.Handler {
 
 func relationRouter(relationHandler handler.RelationsHandler) http.Handler {
 	router := chi.NewRouter()
+	router.Post("/createfriendrelation", relationHandler.CreateFriendsRelation)
+	router.Post("/createsubscriptionrelation", relationHandler.CreateSubscriptionRelation)
+	router.Post("/createblockrelation", relationHandler.CreateBlockRelation)
 	router.Post("/getfriendfromemail", relationHandler.GetAllFriendOfUser)
-	router.Post("/createrelation", relationHandler.CreateRelation)
 	router.Post("/getcommonfriends", relationHandler.GetCommonFriend)
+	router.Post("/getemailreceive", relationHandler.GetEmailReceive)
 
 	return router
 }

@@ -24,3 +24,9 @@ func (m MockUserRepo) CreateUser(ctx context.Context, user models.User) (models.
 	args := m.Called(ctx, user)
 	return args.Get(0).(models.User), args.Error(1)
 }
+
+func (m MockUserRepo) GetListEmailByIDs(ctx context.Context, ids []int) ([]string, error) {
+	//args := m.Called(ctx, ids)
+	//return args.Get(0).(models.UserSlice), args.Error(1)
+	panic("To implement")
+}
