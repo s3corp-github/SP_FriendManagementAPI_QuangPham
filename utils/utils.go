@@ -2,8 +2,17 @@ package utils
 
 import "regexp"
 
+type Utils struct {
+}
+type UtilsInf interface {
+	Intersection(a, b []int) (c []int)
+	FindEmailFromText(text string) []string
+	GetReceiverID(a, b []int) (c []int)
+	UniqueSlice(intSlice []int) []int
+}
+
 // Intersection find the same elements of two array
-func Intersection(a, b []int) (c []int) {
+func (u Utils) Intersection(a, b []int) (c []int) {
 	m := make(map[int]bool)
 
 	for _, item := range a {
@@ -19,7 +28,7 @@ func Intersection(a, b []int) (c []int) {
 }
 
 // FindEmailFromText return email mentioned in text
-func FindEmailFromText(text string) []string {
+func (u Utils) FindEmailFromText(text string) []string {
 
 	regex := regexp.MustCompile(EmailValidationRegex)
 
@@ -34,9 +43,9 @@ func FindEmailFromText(text string) []string {
 }
 
 // GetReceiverID get slice of receiver id
-func GetReceiverID(a, b []int) (c []int) {
+func (u Utils) GetReceiverID(a, b []int) (c []int) {
 
-	sameElements := Intersection(a, b)
+	sameElements := u.Intersection(a, b)
 
 	for _, v := range sameElements {
 		a = removeIndex(a, indexOf(v, a))
@@ -61,7 +70,7 @@ func indexOf(element int, data []int) int {
 }
 
 // UniqueSlice remove duplicate element in slice
-func UniqueSlice(intSlice []int) []int {
+func (u Utils) UniqueSlice(intSlice []int) []int {
 	keys := make(map[int]bool)
 	var list []int
 

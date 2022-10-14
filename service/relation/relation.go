@@ -1,21 +1,26 @@
-package service
+package relation
 
 import (
 	"context"
 	"database/sql"
 	"github.com/friendsofgo/errors"
 	models "github.com/quangpham789/golang-assessment/models"
-	"github.com/quangpham789/golang-assessment/repository"
+	repository "github.com/quangpham789/golang-assessment/repository"
 	"github.com/quangpham789/golang-assessment/repository/relation"
 	"github.com/quangpham789/golang-assessment/repository/user"
 	"github.com/quangpham789/golang-assessment/utils"
 	"log"
 )
 
+var (
+	isRelationExistFunc = isRelationExist
+)
+
 // RelationsService type contain repository needed
 type RelationsService struct {
 	relationsRepository repository.RelationsRepo
 	userRepository      repository.UserRepo
+	utils               utils.UtilsInf
 }
 
 // CreateRelationsInput param using for create friend relation
@@ -67,7 +72,7 @@ type RelationServ interface {
 	GetAllFriendsOfUser(ctx context.Context, input GetAllFriendsInput) (FriendListResponse, error)
 	GetCommonFriendList(ctx context.Context, input CommonFriendsInput) (FriendListResponse, error)
 	GetEmailReceive(ctx context.Context, input EmailReceiveInput) (EmailReceiveResponse, error)
-	isRelationExist(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error)
+	//isRelationExist(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error)
 	isValidToCreateRelation(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error)
 }
 
@@ -163,7 +168,8 @@ func (serv RelationsService) GetCommonFriendList(ctx context.Context, input Comm
 	secondIdsList, err := serv.relationsRepository.GetRelationIDsOfUser(ctx, secondUser.ID, utils.FriendRelation)
 
 	//Intersection two list friend
-	listCommonIds := utils.Intersection(firstIdsList, secondIdsList)
+	//listCommonIds := utils.Intersection(firstIdsList, secondIdsList)
+	listCommonIds := utils.Utils{}.Intersection(firstIdsList, secondIdsList)
 
 	listCommonFriend, err = serv.userRepository.GetListEmailByIDs(ctx, listCommonIds)
 
@@ -179,8 +185,8 @@ func (serv RelationsService) GetCommonFriendList(ctx context.Context, input Comm
 
 }
 
-func (serv RelationsService) isRelationExist(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error) {
-	isExistRelation, err := serv.relationsRepository.IsRelationExist(ctx, requesterID, addresseeID, relationType)
+func isRelationExist(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
+	isExistRelation, err := repo.IsRelationExist(ctx, requesterID, addresseeID, relationType)
 	if err != nil {
 		log.Println("CreateFriendRelation: error when check block relation ", err)
 		return false, err
@@ -190,7 +196,7 @@ func (serv RelationsService) isRelationExist(ctx context.Context, requesterID in
 }
 
 func (serv RelationsService) isValidToCreateRelation(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error) {
-	isExistRelation, err := serv.isRelationExist(ctx, requesterID, addresseeID, relationType)
+	isExistRelation, err := isRelationExistFunc(ctx, serv.relationsRepository, requesterID, addresseeID, relationType)
 
 	if err != nil {
 		return false, err
@@ -204,8 +210,8 @@ func (serv RelationsService) isValidToCreateRelation(ctx context.Context, reques
 
 	switch relationType {
 	case utils.FriendRelation:
-		isRequesterIDBlock, err := serv.isRelationExist(ctx, requesterID, addresseeID, utils.Block)
-		isAddresseeIDBlock, err := serv.isRelationExist(ctx, requesterID, addresseeID, utils.Block)
+		isRequesterIDBlock, err := isRelationExistFunc(ctx, serv.relationsRepository, requesterID, addresseeID, utils.Block)
+		isAddresseeIDBlock, err := isRelationExistFunc(ctx, serv.relationsRepository, requesterID, addresseeID, utils.Block)
 
 		if err != nil {
 			return false, err
@@ -335,7 +341,7 @@ func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailRec
 	}
 
 	// get user who mentioned in text
-	mentionedEmails := utils.FindEmailFromText(input.Text)
+	mentionedEmails := utils.Utils{}.FindEmailFromText(input.Text)
 	userIDsMentionedEmails, err := serv.userRepository.GetUserIDsByEmail(ctx, mentionedEmails)
 
 	// get requester id of block relation
@@ -347,7 +353,7 @@ func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailRec
 
 	// user can receiver update
 	receiversIDnoMentioned := append(friendIDs, subscribeIDs...)
-	receiversID := utils.GetReceiverID(utils.UniqueSlice(append(receiversIDnoMentioned, userIDsMentionedEmails...)), append(blocksID, requester.ID))
+	receiversID := utils.Utils{}.GetReceiverID(utils.Utils{}.UniqueSlice(append(receiversIDnoMentioned, userIDsMentionedEmails...)), append(blocksID, requester.ID))
 
 	emails, err := serv.userRepository.GetListEmailByIDs(ctx, receiversID)
 

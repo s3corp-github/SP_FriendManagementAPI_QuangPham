@@ -64,6 +64,9 @@ func (repo relationsRepository) IsRelationExist(ctx context.Context, requesterId
 }
 
 func (repo relationsRepository) CreateRelation(ctx context.Context, input models.Relation) (bool, error) {
+	if input.RequesterEmail == "" || input.AddresseeEmail == "" {
+		return false, errors.New("Email cannot be empty")
+	}
 	var relation = models.Relation{}
 	relation.RequesterID = input.RequesterID
 	relation.AddresseeID = input.AddresseeID
