@@ -1,4 +1,4 @@
-package handler
+package errors
 
 import (
 	"encoding/json"
@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	errNameCannotBeBlank  = RespError{Code: http.StatusBadRequest, Message: "name cannot be empty"}
-	errEmailCannotBeBlank = RespError{Code: http.StatusBadRequest, Message: "email cannot be empty"}
-	errInvalidEmail       = RespError{Code: http.StatusBadRequest, Message: "invalid email address"}
-	errDataIsEmpty        = RespError{Code: http.StatusBadRequest, Message: "list of friend request is empty"}
+	ErrNameCannotBeBlank  = RespError{Code: http.StatusBadRequest, Message: "name cannot be empty"}
+	ErrEmailCannotBeBlank = RespError{Code: http.StatusBadRequest, Message: "email cannot be empty"}
+	ErrInvalidEmail       = RespError{Code: http.StatusBadRequest, Message: "invalid email address"}
+	ErrDataIsEmpty        = RespError{Code: http.StatusBadRequest, Message: "list of friend request is empty"}
 )
 
 type RespError struct {

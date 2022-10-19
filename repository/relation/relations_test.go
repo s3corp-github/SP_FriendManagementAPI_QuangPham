@@ -11,6 +11,7 @@ import (
 )
 
 var dbURL = "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
+var dbDriver = "postgres"
 
 func TestRepository_CreateFriendRelation(t *testing.T) {
 	tcs := map[string]struct {
@@ -22,8 +23,8 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 			input: models.Relation{
 				RequesterID:    1,
 				AddresseeID:    2,
-				RequesterEmail: "andy@gmail.com",
-				AddresseeEmail: "john@gmail.com",
+				RequesterEmail: "andy@example.com",
+				AddresseeEmail: "john@example.com",
 				RelationType:   utils.FriendRelation,
 			},
 			expResult: true,
@@ -31,8 +32,8 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 		"case missing addressee id": {
 			input: models.Relation{
 				RequesterID:    1,
-				RequesterEmail: "andy@gmail.com",
-				AddresseeEmail: "john@gmail.com",
+				RequesterEmail: "andy@example.com",
+				AddresseeEmail: "john@example.com",
 				RelationType:   utils.FriendRelation,
 			},
 			expResult: false,
@@ -41,8 +42,8 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 		"case missing requester id": {
 			input: models.Relation{
 				AddresseeID:    2,
-				RequesterEmail: "andy@gmail.com",
-				AddresseeEmail: "john@gmail.com",
+				RequesterEmail: "andy@example.com",
+				AddresseeEmail: "john@example.com",
 				RelationType:   utils.FriendRelation,
 			},
 			expResult: false,
@@ -50,8 +51,8 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 		},
 		"case missing requester id and addressee id": {
 			input: models.Relation{
-				RequesterEmail: "andy@gmail.com",
-				AddresseeEmail: "john@gmail.com",
+				RequesterEmail: "andy@example.com",
+				AddresseeEmail: "john@example.com",
 				RelationType:   utils.FriendRelation,
 			},
 			expResult: false,
@@ -63,7 +64,7 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
@@ -111,7 +112,7 @@ func TestRepository_GetRelationIDsOfUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
@@ -159,7 +160,7 @@ func TestRepository_GetRequesterIDRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
@@ -216,7 +217,7 @@ func TestRepository_DeleteRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
@@ -285,7 +286,7 @@ func TestRepository_IsRelationExist(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")

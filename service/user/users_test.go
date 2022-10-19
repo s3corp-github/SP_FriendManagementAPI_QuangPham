@@ -1,9 +1,9 @@
-package service
+package user
 
 import (
 	"context"
 	models "github.com/quangpham789/golang-assessment/models"
-	"github.com/quangpham789/golang-assessment/repository/user"
+	"github.com/quangpham789/golang-assessment/repository/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
@@ -48,7 +48,7 @@ func TestService_CreateUser(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockRepo := new(user.MockUserRepo)
+			mockRepo := new(mocks.UserRepo)
 			mockRepo.On("CreateUser", mock.Anything, mock.Anything).
 				Return(tcMockUserRepo[desc].result, tcMockUserRepo[desc].err)
 

@@ -1,7 +1,9 @@
-package handler
+package user
 
 import (
-	"github.com/quangpham789/golang-assessment/service"
+	"github.com/quangpham789/golang-assessment/handler/errors"
+	"github.com/quangpham789/golang-assessment/service/user"
+	"github.com/quangpham789/golang-assessment/service/user/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -18,24 +20,24 @@ func TestHandler_CreateUser(t *testing.T) {
 		expErr  error
 	}{
 		"success": {
-			input: `{"first_name":"Quang", "last_name":"Pham", "email":"nhutquang23@gmail.com", "phone":"032548784", "is_active": false}`,
-			expBody: `{"ID":15,"FirstName":"Quang","LastName":"Pham","Email":"nhutquang23@gmail.com","Phone":"031544284","IsActive":false}
+			input: `{"email":"nhutquang23@gmail.com", "phone":"032548784", "is_active": false}`,
+			expBody: `{"ID":15,"Email":"nhutquang23@gmail.com","Phone":"031544284","IsActive":false}
 `,
 			expCode: http.StatusCreated,
 		},
-		"error name cannot blank": {
-			input:   `{"name": "", "email":"thang12@gmail.com", "phone":"031544284", "role":"ADMIN", "is_active": false}`,
+		"error email cannot blank": {
+			input:   `{"email":"", "phone":"031544284", "is_active": false}`,
 			expCode: http.StatusBadRequest,
-			expErr:  errNameCannotBeBlank,
+			expErr:  errors.ErrNameCannotBeBlank,
 		},
 	}
 
 	tcsMockUserServ := map[string]struct {
-		result service.UserResponse
+		result user.UserResponse
 		err    error
 	}{
 		"success": {
-			result: service.UserResponse{
+			result: user.UserResponse{
 				ID:       15,
 				Email:    "nhutquang23@gmail.com",
 				Phone:    "031544284",
@@ -51,9 +53,9 @@ func TestHandler_CreateUser(t *testing.T) {
 			res := httptest.NewRecorder()
 
 			// mock data UserService
-			mockUserSv := new(MockUserService)
+			mockUserSv := new(mocks.UserServ)
 			userHandler := UserHandler{mockUserSv}
-			mockUserSv.On("CreateUser", mock.Anything, mock.AnythingOfType("service.CreateUserInput")).Return(
+			mockUserSv.On("CreateUser", mock.Anything, mock.AnythingOfType("user.CreateUserInput")).Return(
 				tcsMockUserServ[desc].result, tcsMockUserServ[desc].err)
 
 			handler := http.HandlerFunc(userHandler.CreateUser)
@@ -77,7 +79,7 @@ func TestHandler_CreateUser(t *testing.T) {
 func TestHandler_ValidateUserInput(t *testing.T) {
 	tcs := map[string]struct {
 		input     UserRequest
-		expResult service.CreateUserInput
+		expResult user.CreateUserInput
 		expErr    error
 	}{
 		"success": {
@@ -86,26 +88,18 @@ func TestHandler_ValidateUserInput(t *testing.T) {
 				Phone:    "02312545678",
 				IsActive: true,
 			},
-			expResult: service.CreateUserInput{
+			expResult: user.CreateUserInput{
 				Email:    "nhutquang23@gmail.com",
-				Phone:    "0343450044",
+				Phone:    "02312545678",
 				IsActive: true,
 			},
-		},
-		"nameCannotBeBlank": {
-			input: UserRequest{
-				Email:    "dcthang@gmail.com",
-				Phone:    "0343450044",
-				IsActive: true,
-			},
-			expErr: errNameCannotBeBlank,
 		},
 		"email cannot be blank": {
 			input: UserRequest{
 				Phone:    "0343450044",
 				IsActive: true,
 			},
-			expErr: errEmailCannotBeBlank,
+			expErr: errors.ErrEmailCannotBeBlank,
 		},
 		"invalidEmail": {
 			input: UserRequest{
@@ -113,7 +107,7 @@ func TestHandler_ValidateUserInput(t *testing.T) {
 				Phone:    "0343450044",
 				IsActive: true,
 			},
-			expErr: errInvalidEmail,
+			expErr: errors.ErrInvalidEmail,
 		},
 	}
 

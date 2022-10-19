@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/friendsofgo/errors"
 	models "github.com/quangpham789/golang-assessment/models"
-	"github.com/quangpham789/golang-assessment/repository"
 	mockrepo "github.com/quangpham789/golang-assessment/repository/mocks"
 	"github.com/quangpham789/golang-assessment/utils"
 	mocksutils "github.com/quangpham789/golang-assessment/utils/mocks"
@@ -59,31 +58,32 @@ func TestService_IsRelationExist(t *testing.T) {
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			//ctx := context.Background()
+			ctx := context.Background()
 			//mockUserRepo := new(mockrepo.UserRepo)
-			//mockRelationRepo := new(mockrepo.RelationsRepo)
-			//mockRelationRepo.On("IsRelationExist", mock.Anything, tc.requesterID, tc.addresseeID, tc.relationType).
-			//	Return(tc.isExistMock, tc.expErr)
+			mockRelationRepo := new(mockrepo.RelationsRepo)
+			mockRelationRepo.On("IsRelationExist", mock.Anything, tc.requesterID, tc.addresseeID, tc.relationType).
+				Return(tc.isExistMock, tc.expErr)
 
 			//relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
 			//res, err := relationService.isRelationExist(ctx, tc.requesterID, tc.addresseeID, tc.relationType)
-			//if tc.expErr != nil {
-			//	require.EqualError(t, err, tc.expErr.Error())
-			//} else {
-			//	require.NoError(t, err)
-			//	require.Equal(t, tc.expResult, res)
-			//
-			//}
-			// Mock
-			defer func() {
-				isRelationExistFunc = isRelationExist
-			}()
+			res, err := isRelationExist(ctx, mockRelationRepo, tc.requesterID, tc.addresseeID, tc.relationType)
+			if tc.expErr != nil {
+				require.EqualError(t, err, tc.expErr.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expResult, res)
 
-			if tc.mockIsRelation.wantCall {
-				isRelationExistFunc = func(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
-					return tc.mockIsRelation.expResult, tc.mockIsRelation.expErr
-				}
 			}
+			// Mock
+			//defer func() {
+			//	isRelationExistFunc = isRelationExist
+			//}()
+			//
+			//if tc.mockIsRelation.wantCall {
+			//	isRelationExistFunc = func(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
+			//		return tc.mockIsRelation.expResult, tc.mockIsRelation.expErr
+			//	}
+			//}
 
 		})
 	}

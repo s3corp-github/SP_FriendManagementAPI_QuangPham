@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	isRelationExistFunc = isRelationExist
+	isRelationExistFunc         = isRelationExist
+	isValidToCreateRelationFunc = isValidToCreateRelation
 )
 
 // RelationsService type contain repository needed
@@ -72,8 +73,6 @@ type RelationServ interface {
 	GetAllFriendsOfUser(ctx context.Context, input GetAllFriendsInput) (FriendListResponse, error)
 	GetCommonFriendList(ctx context.Context, input CommonFriendsInput) (FriendListResponse, error)
 	GetEmailReceive(ctx context.Context, input EmailReceiveInput) (EmailReceiveResponse, error)
-	//isRelationExist(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error)
-	isValidToCreateRelation(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error)
 }
 
 // NewRelationService create new relation service
@@ -121,7 +120,7 @@ func (serv RelationsService) CreateFriendRelation(ctx context.Context, input Cre
 	}
 
 	//check if user blocked or user is friend return false
-	isValid, err := serv.isValidToCreateRelation(ctx, requester.ID, addressee.ID, utils.FriendRelation)
+	isValid, err := isValidToCreateRelationFunc(ctx, serv.relationsRepository, requester.ID, addressee.ID, utils.FriendRelation)
 	//if user has relation block or friend return false
 	if !isValid || err != nil {
 		return CreateRelationsResponse{Success: false}, err
@@ -195,8 +194,8 @@ func isRelationExist(ctx context.Context, repo repository.RelationsRepo, request
 	return isExistRelation, nil
 }
 
-func (serv RelationsService) isValidToCreateRelation(ctx context.Context, requesterID int, addresseeID int, relationType int) (bool, error) {
-	isExistRelation, err := isRelationExistFunc(ctx, serv.relationsRepository, requesterID, addresseeID, relationType)
+func isValidToCreateRelation(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
+	isExistRelation, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, relationType)
 
 	if err != nil {
 		return false, err
@@ -210,8 +209,8 @@ func (serv RelationsService) isValidToCreateRelation(ctx context.Context, reques
 
 	switch relationType {
 	case utils.FriendRelation:
-		isRequesterIDBlock, err := isRelationExistFunc(ctx, serv.relationsRepository, requesterID, addresseeID, utils.Block)
-		isAddresseeIDBlock, err := isRelationExistFunc(ctx, serv.relationsRepository, requesterID, addresseeID, utils.Block)
+		isRequesterIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, utils.Block)
+		isAddresseeIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, utils.Block)
 
 		if err != nil {
 			return false, err
@@ -252,7 +251,7 @@ func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, inp
 	}
 
 	//check if user blocked or user is friend return false
-	isValid, err := serv.isValidToCreateRelation(ctx, requester.ID, target.ID, utils.Subscribe)
+	isValid, err := isValidToCreateRelationFunc(ctx, serv.relationsRepository, requester.ID, target.ID, utils.Subscribe)
 	//if user has relation block or friend return false
 	if !isValid || err != nil {
 		return CreateRelationsResponse{Success: false}, err
@@ -290,7 +289,7 @@ func (serv RelationsService) CreateBlockRelation(ctx context.Context, input Crea
 	}
 
 	//check if user blocked or user is friend return false
-	isValid, err := serv.isValidToCreateRelation(ctx, requester.ID, target.ID, utils.Block)
+	isValid, err := isValidToCreateRelationFunc(ctx, serv.relationsRepository, requester.ID, target.ID, utils.Block)
 	//if user has relation block or friend return false
 	if !isValid || err != nil {
 		return CreateRelationsResponse{Success: false}, err

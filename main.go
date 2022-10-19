@@ -3,16 +3,22 @@ package main
 import (
 	"database/sql"
 	"github.com/go-chi/chi/v5"
-	"github.com/quangpham789/golang-assessment/handler"
+	"github.com/quangpham789/golang-assessment/handler/relation"
+	"github.com/quangpham789/golang-assessment/handler/user"
+	"github.com/quangpham789/golang-assessment/utils"
 	"github.com/quangpham789/golang-assessment/utils/db"
 	"log"
 	"net/http"
 )
 
 func main() {
+	//load config
+	config, err := utils.LoadConfig(".")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
 	// Connection database
-	dbURL := "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
-	dbConn, err := db.ConnectDB(dbURL)
+	dbConn, err := db.ConnectDB(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Println("Connection database fail with error: ", err)
 	}
@@ -20,17 +26,17 @@ func main() {
 	// Init router with gochi
 	router := initRouter(dbConn)
 
-	// Start server with port 5000
-	log.Println("Server start at port 3000")
-	if err := http.ListenAndServe(":3000", router); err != nil {
-		log.Println("Error start server with port 3000", err)
+	// Start server with port 8080
+	log.Println("Server start at port 8080")
+	if err := http.ListenAndServe(":8080", router); err != nil {
+		log.Println("Error start server with port 8080", err)
 	}
 }
 
 func initRouter(dbConn *sql.DB) *chi.Mux {
 	// init user handler
-	userHandler := handler.NewUserHandler(dbConn)
-	relationHandler := handler.NewRelationsHandler(dbConn)
+	userHandler := user.NewUserHandler(dbConn)
+	relationHandler := relation.NewRelationsHandler(dbConn)
 	router := chi.NewRouter()
 	router.Use(logRequest)
 
@@ -43,13 +49,13 @@ func initRouter(dbConn *sql.DB) *chi.Mux {
 }
 
 // TODO: Implement getUsers() API
-func userRouter(userHandler handler.UserHandler) http.Handler {
+func userRouter(userHandler user.UserHandler) http.Handler {
 	router := chi.NewRouter()
 	router.Post("/", userHandler.CreateUser)
 	return router
 }
 
-func relationRouter(relationHandler handler.RelationsHandler) http.Handler {
+func relationRouter(relationHandler relation.RelationsHandler) http.Handler {
 	router := chi.NewRouter()
 	router.Post("/createfriendrelation", relationHandler.CreateFriendsRelation)
 	router.Post("/createsubscriptionrelation", relationHandler.CreateSubscriptionRelation)

@@ -1,8 +1,9 @@
-package handler
+package relation
 
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/quangpham789/golang-assessment/handler/errors"
 	"github.com/quangpham789/golang-assessment/service/relation"
 	"github.com/quangpham789/golang-assessment/utils"
 	"log"
@@ -50,14 +51,14 @@ func (relations RelationsHandler) CreateFriendsRelation(w http.ResponseWriter, r
 	// Convert body request to struct of Handler
 	relationReq := RelationFriendRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Validate body relation request
 	input, err := validateRelationInput(relationReq)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
@@ -75,14 +76,14 @@ func (relations RelationsHandler) GetAllFriendOfUser(w http.ResponseWriter, r *h
 	// Convert body request to struct of Handler
 	getRelationReq := GetRelationRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&getRelationReq); err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Validate body relation request
 	input, err := validateGetRelationInput(getRelationReq)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
@@ -99,14 +100,14 @@ func (relations RelationsHandler) GetCommonFriend(w http.ResponseWriter, r *http
 	// Convert body request to struct of Handler
 	getRelationReq := RelationFriendRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&getRelationReq); err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Validate relation request
 	input, err := validateRelationCommonInput(getRelationReq)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
@@ -124,14 +125,14 @@ func (relations RelationsHandler) CreateSubscriptionRelation(w http.ResponseWrit
 	// Convert body request to struct of Handler
 	relationReq := RelationSubAndBlockRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Validate body relation request
 	input, err := validateSubAndBlockRelationInput(relationReq)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
@@ -149,14 +150,14 @@ func (relations RelationsHandler) CreateBlockRelation(w http.ResponseWriter, r *
 	// Convert body request to struct of Handler
 	relationReq := RelationSubAndBlockRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Validate body relation request
 	input, err := validateSubAndBlockRelationInput(relationReq)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
@@ -174,14 +175,14 @@ func (relations RelationsHandler) GetEmailReceive(w http.ResponseWriter, r *http
 	// Convert body request to struct of Handler
 	relationReq := EmailReceiveRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Validate body relation request
 	input, err := validateEmailReceiveInput(relationReq)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
@@ -197,24 +198,24 @@ func (relations RelationsHandler) GetEmailReceive(w http.ResponseWriter, r *http
 func validateRelationInput(relationReq RelationFriendRequest) (relation.CreateRelationsInput, error) {
 	//check of slice of friend is empty
 	if len(relationReq.Friends) < 2 {
-		return relation.CreateRelationsInput{}, errDataIsEmpty
+		return relation.CreateRelationsInput{}, errors.ErrDataIsEmpty
 	}
 	requesterEmail := strings.TrimSpace(relationReq.Friends[0])
 	if requesterEmail == "" {
-		return relation.CreateRelationsInput{}, errEmailCannotBeBlank
+		return relation.CreateRelationsInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
-		return relation.CreateRelationsInput{}, errInvalidEmail
+		return relation.CreateRelationsInput{}, errors.ErrInvalidEmail
 	}
 
 	addresseeEmail := strings.TrimSpace(relationReq.Friends[1])
 	if addresseeEmail == "" {
-		return relation.CreateRelationsInput{}, errEmailCannotBeBlank
+		return relation.CreateRelationsInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	if _, err := mail.ParseAddress(addresseeEmail); err != nil {
-		return relation.CreateRelationsInput{}, errInvalidEmail
+		return relation.CreateRelationsInput{}, errors.ErrInvalidEmail
 	}
 
 	return relation.CreateRelationsInput{
@@ -227,20 +228,20 @@ func validateSubAndBlockRelationInput(relationReq RelationSubAndBlockRequest) (r
 
 	requesterEmail := strings.TrimSpace(relationReq.Requestor)
 	if requesterEmail == "" {
-		return relation.CreateRelationsInput{}, errEmailCannotBeBlank
+		return relation.CreateRelationsInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
-		return relation.CreateRelationsInput{}, errInvalidEmail
+		return relation.CreateRelationsInput{}, errors.ErrInvalidEmail
 	}
 
 	addresseeEmail := strings.TrimSpace(relationReq.Target)
 	if addresseeEmail == "" {
-		return relation.CreateRelationsInput{}, errEmailCannotBeBlank
+		return relation.CreateRelationsInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	if _, err := mail.ParseAddress(addresseeEmail); err != nil {
-		return relation.CreateRelationsInput{}, errInvalidEmail
+		return relation.CreateRelationsInput{}, errors.ErrInvalidEmail
 	}
 
 	return relation.CreateRelationsInput{
@@ -252,7 +253,7 @@ func validateSubAndBlockRelationInput(relationReq RelationSubAndBlockRequest) (r
 func validateGetRelationInput(relationReq GetRelationRequest) (relation.GetAllFriendsInput, error) {
 	requesterEmail := strings.TrimSpace(relationReq.Email)
 	if requesterEmail == "" {
-		return relation.GetAllFriendsInput{}, errEmailCannotBeBlank
+		return relation.GetAllFriendsInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	return relation.GetAllFriendsInput{
@@ -263,24 +264,24 @@ func validateGetRelationInput(relationReq GetRelationRequest) (relation.GetAllFr
 func validateRelationCommonInput(relationReq RelationFriendRequest) (relation.CommonFriendsInput, error) {
 	//check if slice of friend is empty
 	if len(relationReq.Friends) < 2 {
-		return relation.CommonFriendsInput{}, errDataIsEmpty
+		return relation.CommonFriendsInput{}, errors.ErrDataIsEmpty
 	}
 	requesterEmail := strings.TrimSpace(relationReq.Friends[0])
 	if requesterEmail == "" {
-		return relation.CommonFriendsInput{}, errEmailCannotBeBlank
+		return relation.CommonFriendsInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
-		return relation.CommonFriendsInput{}, errInvalidEmail
+		return relation.CommonFriendsInput{}, errors.ErrInvalidEmail
 	}
 
 	addresseeEmail := strings.TrimSpace(relationReq.Friends[1])
 	if addresseeEmail == "" {
-		return relation.CommonFriendsInput{}, errEmailCannotBeBlank
+		return relation.CommonFriendsInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	if _, err := mail.ParseAddress(addresseeEmail); err != nil {
-		return relation.CommonFriendsInput{}, errInvalidEmail
+		return relation.CommonFriendsInput{}, errors.ErrInvalidEmail
 	}
 
 	return relation.CommonFriendsInput{
@@ -293,11 +294,11 @@ func validateEmailReceiveInput(relationReq EmailReceiveRequest) (relation.EmailR
 
 	requesterEmail := strings.TrimSpace(relationReq.Sender)
 	if requesterEmail == "" {
-		return relation.EmailReceiveInput{}, errEmailCannotBeBlank
+		return relation.EmailReceiveInput{}, errors.ErrEmailCannotBeBlank
 	}
 
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
-		return relation.EmailReceiveInput{}, errInvalidEmail
+		return relation.EmailReceiveInput{}, errors.ErrInvalidEmail
 	}
 
 	return relation.EmailReceiveInput{

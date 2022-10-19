@@ -1,9 +1,10 @@
-package handler
+package user
 
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/quangpham789/golang-assessment/service"
+	"github.com/quangpham789/golang-assessment/handler/errors"
+	userService "github.com/quangpham789/golang-assessment/service/user"
 	"github.com/quangpham789/golang-assessment/utils"
 	"net/http"
 	"net/mail"
@@ -11,12 +12,12 @@ import (
 )
 
 type UserHandler struct {
-	userService service.UserServ
+	userService userService.UserServ
 }
 
 func NewUserHandler(db *sql.DB) UserHandler {
 	return UserHandler{
-		userService: service.NewUserService(db),
+		userService: userService.NewUserService(db),
 	}
 }
 
@@ -30,36 +31,36 @@ func (user UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Convert body request to struct of Handler
 	userReq := UserRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Validate body user request
 	input, err := validateUserInput(userReq)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 
 	// Call service
 	result, err := user.userService.CreateUser(r.Context(), input)
 	if err != nil {
-		JsonResponseError(w, err)
+		errors.JsonResponseError(w, err)
 		return
 	}
 	utils.JsonResponse(w, http.StatusCreated, result)
 }
 
-func validateUserInput(user UserRequest) (service.CreateUserInput, error) {
+func validateUserInput(user UserRequest) (userService.CreateUserInput, error) {
 	email := strings.TrimSpace(user.Email)
 	if email == "" {
-		return service.CreateUserInput{}, errEmailCannotBeBlank
+		return userService.CreateUserInput{}, errors.ErrEmailCannotBeBlank
 	}
 	if _, err := mail.ParseAddress(email); err != nil {
-		return service.CreateUserInput{}, errInvalidEmail
+		return userService.CreateUserInput{}, errors.ErrInvalidEmail
 	}
 
-	return service.CreateUserInput{
+	return userService.CreateUserInput{
 		Email:    email,
 		Phone:    user.Phone,
 		IsActive: user.IsActive,
