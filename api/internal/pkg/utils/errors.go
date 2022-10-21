@@ -7,4 +7,5 @@ const (
 	ErrMessageAddresseeEmailNotExist    = "Addressee email not exist"
 	ErrMessageCanNotBeBlank             = "Email cannot be empty"
 	ErrMessageSlideCannotEmpty          = "Slice of emails cannot empty"
+	ErrMessageEmailNotExist             = "Email not exist"
 )

@@ -14,7 +14,7 @@ type UserRepo struct {
 }
 
 // CreateUser provides a mock function with given fields: ctx, user
-func (_m *UserRepo) CreateUser(ctx context.Context, user dbmodels.dbmodels) (dbmodels.User, error) {
+func (_m *UserRepo) CreateUser(ctx context.Context, user dbmodels.User) (dbmodels.User, error) {
 	ret := _m.Called(ctx, user)
 
 	var r0 dbmodels.User

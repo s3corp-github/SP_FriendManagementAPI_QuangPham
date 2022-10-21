@@ -5,7 +5,7 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
 	mocksutils "github.com/quangpham789/golang-assessment/api/internal/pkg/utils/mocks"
-	mocks2 "github.com/quangpham789/golang-assessment/api/internal/repository/mocks"
+	mocksrepo "github.com/quangpham789/golang-assessment/api/internal/repository/mocks"
 	"github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -60,7 +60,7 @@ func TestService_IsRelationExist(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			//mockUserRepo := new(mockrepo.UserRepo)
-			mockRelationRepo := new(mocks2.RelationsRepo)
+			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, tc.requesterID, tc.addresseeID, tc.relationType).
 				Return(tc.isExistMock, tc.expErr)
 
@@ -93,7 +93,7 @@ func TestService_IsRelationExist(t *testing.T) {
 func TestService_CreateFriendRelation(t *testing.T) {
 	tcs := map[string]struct {
 		input                   CreateRelationsInput
-		userRepoExpResultMock1  dbmodels.dbmodels
+		userRepoExpResultMock1  dbmodels.User
 		userRepoExpResultMock2  dbmodels.User
 		createRelationInputMock dbmodels.Relation
 		repoExpResultMock       bool
@@ -212,13 +212,13 @@ func TestService_CreateFriendRelation(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks2.UserRepo)
+			mockUserRepo := new(mocksrepo.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks2.RelationsRepo)
+			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
@@ -282,10 +282,10 @@ func TestService_GetAllFriendsOfUser(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks2.UserRepo)
+			mockUserRepo := new(mocksrepo.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.Email).
 				Return(tc.expUserByEmailMock, tc.expErr)
-			mockRelationRepo := new(mocks2.RelationsRepo)
+			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock.ID, 1).
 				Return(tc.expRelationIDsOfUser, tc.expErr)
 			mockUserRepo.On("GetListEmailByIDs", mock.Anything, mock.Anything).
@@ -383,13 +383,13 @@ func TestService_GetCommonFriendList(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks2.UserRepo)
+			mockUserRepo := new(mocksrepo.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.FirstEmail).
 				Return(tc.expUserByEmailMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.SecondEmail).
 				Return(tc.expUserByEmailMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks2.RelationsRepo)
+			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock1.ID, 1).
 				Return(tc.expIdsFirstEmail, tc.expErr)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock2.ID, 1).
@@ -536,13 +536,13 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks2.UserRepo)
+			mockUserRepo := new(mocksrepo.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks2.RelationsRepo)
+			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
@@ -684,13 +684,13 @@ func TestService_CreateBlockRelation(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks2.UserRepo)
+			mockUserRepo := new(mocksrepo.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks2.RelationsRepo)
+			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
@@ -755,11 +755,11 @@ func TestService_GetEmailReceive(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks2.UserRepo)
+			mockUserRepo := new(mocksrepo.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.Sender).
 				Return(tc.expUserByEmailMock, tc.expErr)
 
-			mockRelationRepo := new(mocks2.RelationsRepo)
+			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock.ID, 1).
 				Return(tc.expIdsEmail, tc.expErr)
 			mockRelationRepo.On("GetRequesterIDRelation", mock.Anything, mock.Anything, mock.Anything).

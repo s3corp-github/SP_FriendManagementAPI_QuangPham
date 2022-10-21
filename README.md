@@ -1,9 +1,12 @@
-# **Project: go-training**
+# **Project: friend-management**
 ### **Description**:
-Sample crud operation using Go, go-chi, migration, sqlboiler
+Using Go, go-chi, migration, sqlboiler, mockery, viper
 
 ### Database: 
 postgesql
+
+### Load Config file:
+viper
 
 ### Routing: 
 go-chi
@@ -11,31 +14,41 @@ go-chi
 ### Models: 
 -Users
 
--Products
+-Relations
 
-### API ENDPOINTS(localhost:5000)
+### API ENDPOINTS(localhost:8080)
     1. Create User:
-        Path : http:/localhost:5000/users
+        Path: http:/localhost:8080/users
         Method: Post
         Payload:
             {
-                "name": "Test",
-                "email":"test@gmail.com",
+                "email":"test@example.com",
                 "phone":"0123456789",
-                "role":"ADMIN",
-                "is_active": false
+                "is_active": true
             }
         Success: 201
             {
-                "ID": 41,
-                "Name": "Test",
-                "Email": "test@gmail.com",
+                "ID": 1,
+                "Email": "test@example.com",
                 "Phone": "0123456789",
-                "Role": "ADMIN",
-                "IsActive": false
+                "IsActive": true
             }
-
-
+    2. Create friend connection between 2 email
+        Path: http:/localhost:8080/relations/createfriendrelation
+        Method: Post
+        Payload:
+            {
+                "friends": [
+                    "andy@example.com",
+                    "common@example.com"
+                ]
+            }
+        Success: 201
+            {
+                "success":"true"
+            }
+    3. Retreive a list  for an email address
+        Path: 
 
 ### Quick Run Project:
 

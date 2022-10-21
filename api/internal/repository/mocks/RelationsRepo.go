@@ -14,7 +14,7 @@ type RelationsRepo struct {
 }
 
 // CreateRelation provides a mock function with given fields: ctx, input
-func (_m *RelationsRepo) CreateRelation(ctx context.Context, input dbmodels.dbmodels) (bool, error) {
+func (_m *RelationsRepo) CreateRelation(ctx context.Context, input dbmodels.Relation) (bool, error) {
 	ret := _m.Called(ctx, input)
 
 	var r0 bool

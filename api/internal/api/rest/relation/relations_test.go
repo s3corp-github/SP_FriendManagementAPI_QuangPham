@@ -586,7 +586,6 @@ func TestHandler_GetCommonFriend(t *testing.T) {
 	}
 }
 
-// TODO
 func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 
 	type mockSrcCreateSub struct {
@@ -840,6 +839,111 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 			} else {
 				require.Equal(t, res.Code, tc.expCode)
 				require.Equal(t, res.Body.String(), tc.expBody)
+			}
+
+		})
+	}
+}
+
+func TestHandler_GetEmailReceive(t *testing.T) {
+	type mockSrcGetEmailReceive struct {
+		givenInput relation.EmailReceiveInput
+		wantCall   bool
+		expResult  relation.EmailReceiveResponse
+		expErr     error
+	}
+	tcs := map[string]struct {
+		input                  string
+		expCode                int
+		expBody                string
+		mockSrcGetEmailReceive mockSrcGetEmailReceive
+	}{
+		"success": {
+			input:   `{"sender":"andy@example.com", "text":"Hello World! lisa@example.com"}`,
+			expBody: "{\"success\":true,\"recipients\":[\"common@example.com\",\"lisa@example.com\"]}\n",
+			mockSrcGetEmailReceive: mockSrcGetEmailReceive{
+				givenInput: relation.EmailReceiveInput{
+					Sender: "andy@example.com",
+					Text:   "Hello World! lisa@example.com",
+				},
+				wantCall: true,
+				expResult: relation.EmailReceiveResponse{
+					Success: true,
+					Recipients: []string{
+						"common@example.com",
+						"lisa@example.com",
+					},
+				},
+			},
+			expCode: http.StatusOK,
+		},
+		"case sender email input is empty": {
+			input:   `{"sender":"", "text":"Hello World! lisa@example.com"}`,
+			expBody: "{\"message\":\"Email cannot be empty\"}\n",
+			mockSrcGetEmailReceive: mockSrcGetEmailReceive{
+				givenInput: relation.EmailReceiveInput{
+					Sender: "",
+					Text:   "Hello World! lisa@example.com",
+				},
+				wantCall: true,
+				expErr:   customerrors.ErrEmailCannotBeBlank,
+			},
+			expCode: http.StatusBadRequest,
+		},
+		"case sender email input is invalid": {
+			input:   `{"sender":"andyexample.com", "text":"Hello World! lisa@example.com"}`,
+			expBody: "{\"message\":\"Invalid email address\"}\n",
+			mockSrcGetEmailReceive: mockSrcGetEmailReceive{
+				givenInput: relation.EmailReceiveInput{
+					Sender: "andyexample.com",
+					Text:   "Hello World! lisa@example.com",
+				},
+				wantCall: true,
+				expErr:   customerrors.ErrInvalidEmail,
+			},
+			expCode: http.StatusBadRequest,
+		},
+		"case email is not exist": {
+			input:   `{"sender":"andy123@example.com", "text":"Hello World! lisa@example.com"}`,
+			expBody: "{\"message\":\"Email not exist\"}\n",
+			mockSrcGetEmailReceive: mockSrcGetEmailReceive{
+				givenInput: relation.EmailReceiveInput{
+					Sender: "andy123@example.com",
+					Text:   "Hello World! lisa@example.com",
+				},
+				wantCall: true,
+				expErr:   errors.New(utils.ErrMessageEmailNotExist),
+			},
+			expCode: http.StatusInternalServerError,
+		},
+	}
+
+	for desc, tc := range tcs {
+		t.Run(desc, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/relations/getemailreceive",
+				strings.NewReader(tc.input))
+			res := httptest.NewRecorder()
+
+			// mock data RelationService
+			mockRelationSv := new(mocks.RelationServ)
+			relationHandler := RelationsHandler{mockRelationSv}
+
+			if tc.mockSrcGetEmailReceive.wantCall {
+				mockRelationSv.On("GetEmailReceive", mock.Anything,
+					tc.mockSrcGetEmailReceive.givenInput).Return(
+					tc.mockSrcGetEmailReceive.expResult, tc.mockSrcGetEmailReceive.expErr)
+			}
+
+			handler := http.HandlerFunc(relationHandler.GetEmailReceive)
+			handler.ServeHTTP(res, req)
+
+			// test cases
+			if tc.mockSrcGetEmailReceive.expErr != nil {
+				require.Equal(t, tc.expCode, res.Code)
+				require.Equal(t, tc.expBody, res.Body.String())
+			} else {
+				require.Equal(t, tc.expCode, res.Code)
+				require.Equal(t, tc.expBody, res.Body.String())
 			}
 
 		})

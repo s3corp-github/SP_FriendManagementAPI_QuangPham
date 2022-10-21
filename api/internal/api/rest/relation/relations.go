@@ -194,9 +194,10 @@ func (relations RelationsHandler) GetEmailReceive(w http.ResponseWriter, r *http
 	result, err := relations.relationsService.GetEmailReceive(r.Context(), input)
 	if err != nil {
 		log.Println("CreateRelation error", err)
-		utils.JsonResponse(w, http.StatusForbidden, result)
+		errors.JsonResponseError(w, err)
+		return
 	}
-	utils.JsonResponse(w, http.StatusCreated, result)
+	utils.JsonResponse(w, http.StatusOK, result)
 }
 
 func validateRelationInput(relationReq RelationsFriendRequest) (relation.CreateRelationsInput, error) {

@@ -11,6 +11,7 @@ import (
 )
 
 var dbURL = "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
+var dbDriver = "postgres"
 
 func TestRepository_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
@@ -36,7 +37,7 @@ func TestRepository_CreateUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.users;")
@@ -85,7 +86,7 @@ func TestRepository_GetUserByEmail(t *testing.T) {
 			ctx := context.Background()
 
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.users;")
@@ -127,7 +128,7 @@ func TestRepository_GetUserByID(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.users;")
@@ -171,7 +172,7 @@ func TestRepository_GetUserIDsByEmail(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.users;")

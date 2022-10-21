@@ -348,7 +348,8 @@ func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailRec
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.Sender)
 
 	if err != nil {
-		return EmailReceiveResponse{Success: false}, err
+		log.Println("GetEmailReceive: error when get user by email", err)
+		return EmailReceiveResponse{Success: false}, errors.New(utils.ErrMessageEmailNotExist)
 	}
 
 	//get lst id friend
