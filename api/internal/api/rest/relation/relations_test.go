@@ -2,10 +2,10 @@ package relation
 
 import (
 	"github.com/friendsofgo/errors"
-	customerrors "github.com/quangpham789/golang-assessment/api/internal/api/rest/errors"
-	"github.com/quangpham789/golang-assessment/api/internal/controller/relation"
-	"github.com/quangpham789/golang-assessment/api/internal/controller/relation/mocks"
-	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
+	customerrors "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/api/rest"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/relation"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/relation/mocks"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -191,7 +191,7 @@ func TestHandler_validateSubAndBlockRelationInput(t *testing.T) {
 	}{
 		"success": {
 			input: RelationsSubAndBlockRequest{
-				Requestor: "andy@example.com",
+				Requester: "andy@example.com",
 				Target:    "john@example.com",
 			},
 			expResult: relation.CreateRelationsInput{
@@ -201,34 +201,34 @@ func TestHandler_validateSubAndBlockRelationInput(t *testing.T) {
 		},
 		"case email cannot be blank": {
 			input: RelationsSubAndBlockRequest{
-				Requestor: "andy@example.com",
+				Requester: "andy@example.com",
 			},
 			expErr: customerrors.ErrEmailCannotBeBlank,
 		},
 		"case requester email invalidEmail": {
 			input: RelationsSubAndBlockRequest{
-				Requestor: "andyexample.com",
+				Requester: "andyexample.com",
 				Target:    "john@example.com",
 			},
 			expErr: customerrors.ErrInvalidEmail,
 		},
 		"case requester email is empty": {
 			input: RelationsSubAndBlockRequest{
-				Requestor: "",
+				Requester: "",
 				Target:    "john@example.com",
 			},
 			expErr: customerrors.ErrEmailCannotBeBlank,
 		},
 		"case addressee email is empty": {
 			input: RelationsSubAndBlockRequest{
-				Requestor: "andy@example.com",
+				Requester: "andy@example.com",
 				Target:    "",
 			},
 			expErr: customerrors.ErrEmailCannotBeBlank,
 		},
 		"case addressee email invalidEmail": {
 			input: RelationsSubAndBlockRequest{
-				Requestor: "andy@example.com",
+				Requester: "andy@example.com",
 				Target:    "johnexample.com",
 			},
 			expErr: customerrors.ErrInvalidEmail,

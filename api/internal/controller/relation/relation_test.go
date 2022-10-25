@@ -3,10 +3,10 @@ package relation
 import (
 	"context"
 	"github.com/friendsofgo/errors"
-	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
-	mocksutils "github.com/quangpham789/golang-assessment/api/internal/pkg/utils/mocks"
-	mocksrepo "github.com/quangpham789/golang-assessment/api/internal/repository/mocks"
-	"github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
+	mocksutils "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils/mocks"
+	mocksrepo "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/mocks"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
@@ -37,17 +37,6 @@ func TestService_IsRelationExist(t *testing.T) {
 			isExistMock:  true,
 			expResult:    true,
 		},
-		"want failed is relations exists": {
-			requesterID:  1,
-			addresseeID:  3,
-			relationType: 1,
-			isExistMock:  true,
-			expResult:    true,
-			mockIsRelation: mockIsRelation{
-				wantCall: true,
-				expErr:   errors.New("something went wrong"),
-			},
-		},
 		"case requesterID is 0": {
 			addresseeID:  3,
 			relationType: 1,
@@ -59,13 +48,10 @@ func TestService_IsRelationExist(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			//mockUserRepo := new(mockrepo.UserRepo)
 			mockRelationRepo := new(mocksrepo.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, tc.requesterID, tc.addresseeID, tc.relationType).
 				Return(tc.isExistMock, tc.expErr)
 
-			//relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
-			//res, err := relationService.isRelationExist(ctx, tc.requesterID, tc.addresseeID, tc.relationType)
 			res, err := isRelationExist(ctx, mockRelationRepo, tc.requesterID, tc.addresseeID, tc.relationType)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -74,17 +60,6 @@ func TestService_IsRelationExist(t *testing.T) {
 				require.Equal(t, tc.expResult, res)
 
 			}
-			// Mock
-			//defer func() {
-			//	isRelationExistFunc = isRelationExist
-			//}()
-			//
-			//if tc.mockIsRelation.wantCall {
-			//	isRelationExistFunc = func(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
-			//		return tc.mockIsRelation.expResult, tc.mockIsRelation.expErr
-			//	}
-			//}
-
 		})
 	}
 
@@ -129,7 +104,7 @@ func TestService_CreateFriendRelation(t *testing.T) {
 				Success: true,
 			},
 		},
-		"requester user not found": {
+		"case requester user not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "",
 				AddresseeEmail: "lisa@example.com",
@@ -152,9 +127,9 @@ func TestService_CreateFriendRelation(t *testing.T) {
 			expResult: CreateRelationsResponse{
 				Success: false,
 			},
-			expErr: errors.New("Email cannot be empty"),
+			expErr: errors.New("Error get requester email from request"),
 		},
-		"addressee user not found": {
+		"case addressee user not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
 				AddresseeEmail: "",
@@ -176,9 +151,9 @@ func TestService_CreateFriendRelation(t *testing.T) {
 			expResult: CreateRelationsResponse{
 				Success: false,
 			},
-			expErr: errors.New("Email cannot be empty"),
+			expErr: errors.New("Error get requester email from request"),
 		},
-		"error create relation because friend relation is existed ": {
+		"case error create relation because friend relation is existed ": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
 				AddresseeEmail: "lisa@example.com",
@@ -205,7 +180,7 @@ func TestService_CreateFriendRelation(t *testing.T) {
 			expResult: CreateRelationsResponse{
 				Success: false,
 			},
-			expErr: errors.New("Email cannot be empty"),
+			expErr: errors.New("Error get requester email from request"),
 		},
 	}
 
@@ -453,7 +428,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 				Success: true,
 			},
 		},
-		"requester user not found": {
+		"case requester user not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "",
 				AddresseeEmail: "lisa@example.com",
@@ -478,7 +453,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
-		"addressee user not found": {
+		"case addressee user not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
 				AddresseeEmail: "",
@@ -502,7 +477,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
-		"error create relation because friend relation is existed ": {
+		"case error create relation because friend relation is existed ": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
 				AddresseeEmail: "lisa@example.com",
@@ -601,7 +576,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 				Success: true,
 			},
 		},
-		"requester user not found": {
+		"case requester user not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "",
 				AddresseeEmail: "lisa@example.com",
@@ -626,7 +601,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
-		"addressee user not found": {
+		"case addressee user not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
 				AddresseeEmail: "",
@@ -650,7 +625,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
-		"error create relation because friend relation is existed ": {
+		"case error create relation because friend relation is existed ": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
 				AddresseeEmail: "lisa@example.com",
@@ -771,9 +746,6 @@ func TestService_GetEmailReceive(t *testing.T) {
 
 			mockUserRepo.On("GetUserIDsByEmail", mock.Anything, tc.expListEmail).
 				Return(tc.expUserIDByEmail, tc.expErr)
-			//
-			//mockUserRepo.On("GetRequesterIDRelation", mock.Anything, tc.expUserByEmailMock.ID, 3).
-			//	Return(tc.expUserIDBlock, tc.expErr)
 
 			mockUtils.On("UniqueSlice", mock.Anything).
 				Return(tc.expReceiveIDs, tc.expErr)

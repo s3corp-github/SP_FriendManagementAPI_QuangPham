@@ -3,61 +3,65 @@ package user
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/quangpham789/golang-assessment/api/internal/api/rest/errors"
-	userService "github.com/quangpham789/golang-assessment/api/internal/controller/user"
-	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/api/rest"
 	"net/http"
 	"net/mail"
 	"strings"
+
+	userService "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/user"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 )
 
-type UserHandler struct {
+// UsersHandler create users handler contain user service
+type UsersHandler struct {
 	userService userService.UserServ
 }
 
-func NewUserHandler(db *sql.DB) UserHandler {
-	return UserHandler{
+// NewUserHandler create user handler contain UsersHandler
+func NewUserHandler(db *sql.DB) UsersHandler {
+	return UsersHandler{
 		userService: userService.NewUserService(db),
 	}
 }
 
-type UserRequest struct {
+// UsersRequest request to create new user
+type UsersRequest struct {
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
 	IsActive bool   `json:"is_active"`
 }
 
-func (user UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+// CreateUser end point to create new user
+func (user UsersHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Convert body request to struct of Handler
-	userReq := UserRequest{}
+	userReq := UsersRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
-		errors.JsonResponseError(w, err)
+		rest.JsonResponseError(w, err)
 		return
 	}
 
-	// Validate body user request
 	input, err := validateUserInput(userReq)
 	if err != nil {
-		errors.JsonResponseError(w, err)
+		rest.JsonResponseError(w, err)
 		return
 	}
 
-	// Call service
 	result, err := user.userService.CreateUser(r.Context(), input)
 	if err != nil {
-		errors.JsonResponseError(w, err)
+		rest.JsonResponseError(w, err)
 		return
 	}
-	utils.JsonResponse(w, http.StatusCreated, result)
+	utils.ResponseJson(w, http.StatusCreated, result)
 }
 
-func validateUserInput(user UserRequest) (userService.CreateUserInput, error) {
+// validateUserInput function validate user request
+func validateUserInput(user UsersRequest) (userService.CreateUserInput, error) {
 	email := strings.TrimSpace(user.Email)
 	if email == "" {
-		return userService.CreateUserInput{}, errors.ErrEmailCannotBeBlank
+		return userService.CreateUserInput{}, rest.ErrEmailCannotBeBlank
 	}
 	if _, err := mail.ParseAddress(email); err != nil {
-		return userService.CreateUserInput{}, errors.ErrInvalidEmail
+		return userService.CreateUserInput{}, rest.ErrInvalidEmail
 	}
 
 	return userService.CreateUserInput{

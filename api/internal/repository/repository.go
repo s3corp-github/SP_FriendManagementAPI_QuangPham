@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 )
 
 type UserRepo interface {

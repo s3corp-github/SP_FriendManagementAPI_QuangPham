@@ -1,6 +1,10 @@
 package utils
 
-import "regexp"
+import (
+	"log"
+	"net/http"
+	"regexp"
+)
 
 type Utils struct {
 }
@@ -81,4 +85,12 @@ func (u Utils) UniqueSlice(intSlice []int) []int {
 		}
 	}
 	return list
+}
+
+func LogRequest(h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Request path: %s", r.URL.Path)
+		h.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }

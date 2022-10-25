@@ -3,9 +3,9 @@ package relation
 import (
 	"context"
 	"github.com/friendsofgo/errors"
-	"github.com/quangpham789/golang-assessment/api/internal/config/db"
-	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
-	models "github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/config/db"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -67,9 +67,6 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
-
-			// TODO: Load DB user test sql
 
 			friendshipRepo := NewRelationsRepository(dbConn)
 			res, err := friendshipRepo.CreateRelation(ctx, tc.input)
@@ -115,9 +112,6 @@ func TestRepository_GetRelationIDsOfUser(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
-
-			// TODO: Load DB user test sql
 
 			friendshipRepo := NewRelationsRepository(dbConn)
 			res, err := friendshipRepo.GetRelationIDsOfUser(ctx, tc.requesterId, tc.relationType)
@@ -163,9 +157,6 @@ func TestRepository_GetRequesterIDRelation(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
-
-			// TODO: Load DB user test sql
 
 			friendshipRepo := NewRelationsRepository(dbConn)
 			res, err := friendshipRepo.GetRequesterIDRelation(ctx, tc.requesterId, tc.relationType)
@@ -220,9 +211,6 @@ func TestRepository_DeleteRelation(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
-
-			// TODO: Load DB user test sql
 
 			friendshipRepo := NewRelationsRepository(dbConn)
 			err = friendshipRepo.DeleteRelation(ctx, tc.requesterId, tc.addresseeId, tc.relationType)
@@ -289,9 +277,6 @@ func TestRepository_IsRelationExist(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.relations WHERE ID = ;")
-
-			// TODO: Load DB user test sql
 
 			friendshipRepo := NewRelationsRepository(dbConn)
 			result, err := friendshipRepo.IsRelationExist(ctx, tc.requesterId, tc.addresseeId, tc.relationType)

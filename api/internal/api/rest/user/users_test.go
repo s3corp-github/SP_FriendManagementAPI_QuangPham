@@ -1,9 +1,9 @@
 package user
 
 import (
-	"github.com/quangpham789/golang-assessment/api/internal/api/rest/errors"
-	"github.com/quangpham789/golang-assessment/api/internal/controller/user"
-	"github.com/quangpham789/golang-assessment/api/internal/controller/user/mocks"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/api/rest"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/user"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/user/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -25,11 +25,11 @@ func TestHandler_CreateUser(t *testing.T) {
 `,
 			expCode: http.StatusCreated,
 		},
-		"error email cannot blank": {
+		"case error email cannot blank": {
 			input:   `{"email":"", "phone":"031544284", "is_active": false}`,
 			expBody: "{\"message\":\"Email cannot be empty\"}\n",
 			expCode: http.StatusBadRequest,
-			expErr:  errors.ErrNameCannotBeBlank,
+			expErr:  rest.ErrNameCannotBeBlank,
 		},
 	}
 
@@ -55,7 +55,7 @@ func TestHandler_CreateUser(t *testing.T) {
 
 			// mock data UserService
 			mockUserSv := new(mocks.UserServ)
-			userHandler := UserHandler{mockUserSv}
+			userHandler := UsersHandler{mockUserSv}
 			mockUserSv.On("CreateUser", mock.Anything, mock.AnythingOfType("user.CreateUserInput")).Return(
 				tcsMockUserServ[desc].result, tcsMockUserServ[desc].err)
 
@@ -78,12 +78,12 @@ func TestHandler_CreateUser(t *testing.T) {
 
 func TestHandler_ValidateUserInput(t *testing.T) {
 	tcs := map[string]struct {
-		input     UserRequest
+		input     UsersRequest
 		expResult user.CreateUserInput
 		expErr    error
 	}{
 		"success": {
-			input: UserRequest{
+			input: UsersRequest{
 				Email:    "nhutquang23@gmail.com",
 				Phone:    "02312545678",
 				IsActive: true,
@@ -94,20 +94,20 @@ func TestHandler_ValidateUserInput(t *testing.T) {
 				IsActive: true,
 			},
 		},
-		"email cannot be blank": {
-			input: UserRequest{
+		"case email cannot be blank": {
+			input: UsersRequest{
 				Phone:    "0343450044",
 				IsActive: true,
 			},
-			expErr: errors.ErrEmailCannotBeBlank,
+			expErr: rest.ErrEmailCannotBeBlank,
 		},
-		"invalidEmail": {
-			input: UserRequest{
+		"case invalidEmail": {
+			input: UsersRequest{
 				Email:    "Thang12344email",
 				Phone:    "0343450044",
 				IsActive: true,
 			},
-			expErr: errors.ErrInvalidEmail,
+			expErr: rest.ErrInvalidEmail,
 		},
 	}
 
