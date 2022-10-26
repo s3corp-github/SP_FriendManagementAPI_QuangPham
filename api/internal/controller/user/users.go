@@ -18,7 +18,7 @@ type UserService struct {
 // UserServ define function of user
 type UserServ interface {
 	CreateUser(ctx context.Context, input CreateUserInput) (UserResponse, error)
-	GetListUser(ctx context.Context) ([]UserResponse, error)
+	GetListUser(ctx context.Context) (UserEmailResponse, error)
 }
 
 // CreateUserInput param using create user
@@ -34,6 +34,11 @@ type UserResponse struct {
 	Email    string
 	Phone    string
 	IsActive bool
+}
+
+// UserEmailResponse type list email of user
+type UserEmailResponse struct {
+	Email []string
 }
 
 // NewUserService create new user service
@@ -63,22 +68,14 @@ func (serv UserService) CreateUser(ctx context.Context, input CreateUserInput) (
 }
 
 // GetListUser return list of user
-func (serv UserService) GetListUser(ctx context.Context) ([]UserResponse, error) {
-	var userResult []UserResponse
+func (serv UserService) GetListUser(ctx context.Context) (UserEmailResponse, error) {
+	var userResult UserEmailResponse
 	user, err := serv.userRepository.GetAllUser(ctx)
 	if err != nil {
-		return nil, err
+		return UserEmailResponse{}, err
 	}
 
-	for _, u := range user {
-		var item = UserResponse{
-			ID:       u.ID,
-			Email:    u.Email,
-			Phone:    u.Phone.String,
-			IsActive: u.IsActive.Bool,
-		}
-		userResult = append(userResult, item)
-	}
+	userResult.Email = user
 
 	return userResult, nil
 }

@@ -184,3 +184,43 @@ func TestRepository_GetUserIDsByEmail(t *testing.T) {
 	}
 
 }
+
+func TestRepository_GetListUser(t *testing.T) {
+	tcs := map[string]struct {
+		expResult []string
+		expErr    error
+	}{
+		"success": {
+			expResult: []string{
+				"andy@example.com",
+				"john@example.com",
+				"common@example.com",
+				"lisa@example.com",
+			},
+		},
+	}
+
+	for desc, tc := range tcs {
+		t.Run(desc, func(t *testing.T) {
+			ctx := context.Background()
+
+			// Connect DB test
+			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			require.NoError(t, err)
+			defer dbConn.Close()
+			//defer dbConn.Exec("DELETE FROM public.users;")
+
+			userRepo := NewUserRepository(dbConn)
+			res, err := userRepo.GetAllUser(ctx)
+
+			if tc.expErr != nil {
+				require.EqualError(t, err, tc.expErr.Error())
+			} else {
+				tc.expResult = res
+				require.NoError(t, err)
+				require.Equal(t, tc.expResult, res)
+			}
+		})
+	}
+
+}

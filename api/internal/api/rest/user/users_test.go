@@ -76,6 +76,63 @@ func TestHandler_CreateUser(t *testing.T) {
 	}
 }
 
+func TestHandler_GetListUser(t *testing.T) {
+	tcs := map[string]struct {
+		expCode int
+		expBody string
+		expErr  error
+	}{
+		"success": {
+			expBody: `{"Email":["andy@example.com","john@example.com","common@example.com","lisa@example.com"]}
+`,
+			expCode: http.StatusOK,
+		},
+	}
+
+	tcsMockUserServ := map[string]struct {
+		result user.UserEmailResponse
+		err    error
+	}{
+		"success": {
+			result: user.UserEmailResponse{
+				Email: []string{
+					"andy@example.com",
+					"john@example.com",
+					"common@example.com",
+					"lisa@example.com",
+				},
+			},
+		},
+	}
+
+	for desc, tc := range tcs {
+		t.Run(desc, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/users", nil)
+			res := httptest.NewRecorder()
+
+			// mock data UserService
+			mockUserSv := new(mocks.UserServ)
+			userHandler := UsersHandler{mockUserSv}
+			mockUserSv.On("GetListUser", mock.Anything).Return(
+				tcsMockUserServ[desc].result, tcsMockUserServ[desc].err)
+
+			handler := http.HandlerFunc(userHandler.GetListUser)
+			handler.ServeHTTP(res, req)
+
+			// test cases
+			if tc.expErr != nil {
+				require.Equal(t, res.Code, tc.expCode)
+
+				require.Equal(t, res.Body.String(), tc.expBody)
+			} else {
+				require.Equal(t, res.Code, tc.expCode)
+				require.Equal(t, res.Body.String(), tc.expBody)
+			}
+
+		})
+	}
+}
+
 func TestHandler_ValidateUserInput(t *testing.T) {
 	tcs := map[string]struct {
 		input     UsersRequest

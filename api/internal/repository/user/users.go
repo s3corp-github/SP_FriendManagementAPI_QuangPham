@@ -3,8 +3,6 @@ package user
 import (
 	"context"
 	"database/sql"
-	"log"
-
 	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
@@ -31,7 +29,6 @@ func (repo userRepository) GetListEmailByIDs(ctx context.Context, ids []int) ([]
 	}
 	userResult, err := models.Users(qm.WhereIn(models.UserColumns.ID+" IN ?", convertedIDs...)).All(ctx, repo.connection)
 	if err != nil {
-		log.Println("GetListEmailByIDs error when get all friends of user", err)
 		return nil, err
 	}
 	for _, i := range userResult {
@@ -98,15 +95,18 @@ func (repo userRepository) GetUserIDsByEmail(ctx context.Context, emails []strin
 	return result, nil
 }
 
-func (repo userRepository) GetAllUser(ctx context.Context) (models.UserSlice, error) {
+func (repo userRepository) GetAllUser(ctx context.Context) ([]string, error) {
 
+	var emailUser []string
 	userResult, err := models.Users(
-		qm.Select(models.UserColumns.ID, models.UserColumns.Email),
+		qm.Select(models.UserColumns.Email),
 	).All(ctx, repo.connection)
 
 	if err != nil {
 		return nil, err
 	}
-
-	return userResult, nil
+	for _, i := range userResult {
+		emailUser = append(emailUser, i.Email)
+	}
+	return emailUser, nil
 }
