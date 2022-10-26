@@ -20,12 +20,6 @@ go-chi
     1. Get List User:
         Path: http:/localhost:8080/users
         Method: GET
-        Payload:
-            {
-                "email":"test@example.com",
-                "phone":"0123456789",
-                "is_active": true
-            }
         Success: 200
             {
               "Email": [
