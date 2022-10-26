@@ -27,32 +27,14 @@ go-chi
                 "is_active": true
             }
         Success: 200
-            [
-              {
-                  "ID": 1,
-                  "Email": "andy@example.com",
-                  "Phone": "",
-                  "IsActive": false
-              },
-              {
-                  "ID": 2,
-                  "Email": "john@example.com",
-                  "Phone": "",
-                  "IsActive": false
-              },
-              {
-                  "ID": 3,
-                  "Email": "common@example.com",
-                  "Phone": "",
-                  "IsActive": false
-              },
-              {
-                  "ID": 4,
-                  "Email": "lisa@example.com",
-                  "Phone": "",
-                  "IsActive": false
-              }
-            ]
+            {
+              "Email": [
+                  "andy@example.com",
+                  "john@example.com",
+                  "common@example.com",
+                  "lisa@example.com"
+              ]
+            }
     2. Create User:
         Path: http:/localhost:8080/users
         Method: Post
