@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+
 	"github.com/friendsofgo/errors"
 	_ "github.com/lib/pq" // driver postgres
 )

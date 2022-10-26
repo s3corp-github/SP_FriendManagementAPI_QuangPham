@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 	"log"
 	"net/http"
 
@@ -11,10 +10,11 @@ import (
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/api/rest/user"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/config"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/config/db"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 )
 
 func main() {
-	config, err := config.LoadConfig(".")
+	config, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}
@@ -50,6 +50,7 @@ func initRouter(dbConn *sql.DB) *chi.Mux {
 func userRouter(userHandler user.UsersHandler) http.Handler {
 	router := chi.NewRouter()
 	router.Post("/", userHandler.CreateUser)
+	router.Get("/", userHandler.GetListUser)
 	return router
 }
 

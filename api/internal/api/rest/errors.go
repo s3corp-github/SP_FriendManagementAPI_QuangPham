@@ -3,12 +3,13 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 	"net/http"
+
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 )
 
 var (
-	ErrNameCannotBeBlank               = RespError{Code: http.StatusBadRequest, Message: "Name cannot be empty"}
+	ErrNameInvalid                     = RespError{Code: http.StatusBadRequest, Message: "Name cannot be empty"}
 	ErrEmailCannotBeBlank              = RespError{Code: http.StatusBadRequest, Message: "Email cannot be empty"}
 	ErrInvalidEmail                    = RespError{Code: http.StatusBadRequest, Message: "Invalid email address"}
 	ErrDataIsEmpty                     = RespError{Code: http.StatusBadRequest, Message: "List of friend request is empty"}

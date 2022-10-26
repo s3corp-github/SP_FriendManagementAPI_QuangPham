@@ -3,7 +3,6 @@ package relation
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
@@ -90,19 +89,16 @@ func (serv RelationsService) GetAllFriendsOfUser(ctx context.Context, input GetA
 	//get requesterId from request
 	userGetFromReq, err := serv.userRepository.GetUserByEmail(ctx, input.Email)
 	if err != nil {
-		log.Println("GetAllFriendsOfUser: error get email from request ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 
 	lstIdUser, err := serv.relationsRepository.GetRelationIDsOfUser(ctx, userGetFromReq.ID, utils.FriendRelation)
 	if err != nil {
-		log.Println("GetAllFriendsOfUser: error get list ids user ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 
 	lstFriends, err := serv.userRepository.GetListEmailByIDs(ctx, lstIdUser)
 	if err != nil {
-		log.Println("GetAllFriendsOfUser: error get list email by user id ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 
@@ -118,25 +114,21 @@ func (serv RelationsService) CreateFriendRelation(ctx context.Context, input Cre
 	//get requesterId from email request
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		log.Println("CreateFriendRelation: error get email from request ", err)
 		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageRequesterEmailFromRequest)
 	}
 
 	// requester email not exist
 	if requester.Email == "" {
-		log.Println("CreateFriendRelation: error requester email not exist ", err)
 		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageRequesterEmailNotExist)
 	}
 
 	//get addresseeId from email request
 	addressee, err := serv.userRepository.GetUserByEmail(ctx, input.AddresseeEmail)
 	if err != nil {
-		log.Println("CreateFriendRelation: error get email from request ", err)
 		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailFromRequest)
 	}
 	// requester email not exist
 	if addressee.Email == "" {
-		log.Println("CreateFriendRelation: error addressee email not exist ", err)
 		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailNotExist)
 	}
 
@@ -154,11 +146,8 @@ func (serv RelationsService) CreateFriendRelation(ctx context.Context, input Cre
 		RelationType:   utils.FriendRelation,
 	}
 	result, err := serv.relationsRepository.CreateRelation(ctx, relationFriendInput)
-	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
-	}
 
-	return CreateRelationsResponse{Success: result}, nil
+	return CreateRelationsResponse{Success: result}, err
 }
 
 // GetCommonFriendList function implement get common friend
@@ -169,36 +158,30 @@ func (serv RelationsService) GetCommonFriendList(ctx context.Context, input Comm
 	//get requesterId from email request
 	firstUser, err := serv.userRepository.GetUserByEmail(ctx, input.FirstEmail)
 	if err != nil {
-		log.Println("GetCommonFriendList: error get email from request ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 
 	//get first friend list
 	firstIdsList, err := serv.relationsRepository.GetRelationIDsOfUser(ctx, firstUser.ID, utils.FriendRelation)
 	if err != nil {
-		log.Println("GetCommonFriendList: error get ids list ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 	//get requesterId from email request
 	secondUser, err := serv.userRepository.GetUserByEmail(ctx, input.SecondEmail)
 	if err != nil {
-		log.Println("GetCommonFriendList: error get email from request ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 	//get second friend list
 	secondIdsList, err := serv.relationsRepository.GetRelationIDsOfUser(ctx, secondUser.ID, utils.FriendRelation)
 	if err != nil {
-		log.Println("GetCommonFriendList: error get ids from email ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 	//Intersection two list friend
-	//listCommonIds := utils.Intersection(firstIdsList, secondIdsList)
 	listCommonIds := utils.Utils{}.Intersection(firstIdsList, secondIdsList)
 
 	listCommonFriend, err = serv.userRepository.GetListEmailByIDs(ctx, listCommonIds)
 
 	if err != nil {
-		log.Println("GetCommonFriendList: error get list email from list ids ", err)
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
 	return FriendListResponse{
@@ -213,7 +196,6 @@ func (serv RelationsService) GetCommonFriendList(ctx context.Context, input Comm
 func isRelationExist(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
 	isExistRelation, err := repo.IsRelationExist(ctx, requesterID, addresseeID, relationType)
 	if err != nil {
-		log.Println("CreateFriendRelation: error when check block relation ", err)
 		return false, err
 	}
 
@@ -257,7 +239,7 @@ func isValidToCreateRelation(ctx context.Context, repo repository.RelationsRepo,
 	}
 
 	if isValid == false {
-		return false, errors.New("Unable to create relation")
+		return false, errors.New(utils.ErrMessageUnableCreateRelation)
 	}
 	return isValid, nil
 }
@@ -267,24 +249,20 @@ func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, inp
 	//get requesterId from email request
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		log.Println("CreateSubscriptionRelation: error get email from request ", err)
 		return CreateRelationsResponse{Success: false}, err
 	}
 
 	if requester.Email == "" {
-		log.Println("CreateSubscriptionRelation: error email requester not exist ", err)
 		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageRequesterEmailNotExist)
 	}
 
 	//get addresseeId from email request
 	target, err := serv.userRepository.GetUserByEmail(ctx, input.AddresseeEmail)
 	if err != nil {
-		log.Println("CreateFriendRelation: error get email from request ", err)
 		return CreateRelationsResponse{Success: false}, err
 	}
 
 	if target.Email == "" {
-		log.Println("CreateSubscriptionRelation: error email target not exist ", err)
 		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailNotExist)
 	}
 
@@ -304,11 +282,8 @@ func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, inp
 		RelationType:   utils.Subscribe,
 	}
 	result, err := serv.relationsRepository.CreateRelation(ctx, relationFriendInput)
-	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
-	}
 
-	return CreateRelationsResponse{Success: result}, nil
+	return CreateRelationsResponse{Success: result}, err
 }
 
 // CreateBlockRelation function create block relation
@@ -316,14 +291,12 @@ func (serv RelationsService) CreateBlockRelation(ctx context.Context, input Crea
 	//get requesterId from email request
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		log.Println("CreateSubscriptionRelation: error get email from request ", err)
 		return CreateRelationsResponse{Success: false}, err
 	}
 
 	//get addresseeId from email request
 	target, err := serv.userRepository.GetUserByEmail(ctx, input.AddresseeEmail)
 	if err != nil {
-		log.Println("CreateFriendRelation: error get email from request ", err)
 		return CreateRelationsResponse{Success: false}, err
 	}
 
@@ -350,11 +323,7 @@ func (serv RelationsService) CreateBlockRelation(ctx context.Context, input Crea
 	// if insert block is success then delete subcribe relation
 	err = serv.relationsRepository.DeleteRelation(ctx, requester.ID, target.ID, utils.Subscribe)
 
-	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
-	}
-
-	return CreateRelationsResponse{Success: result}, nil
+	return CreateRelationsResponse{Success: result}, err
 }
 
 // GetEmailReceive function email receive info
@@ -363,7 +332,6 @@ func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailRec
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.Sender)
 
 	if err != nil {
-		log.Println("GetEmailReceive: error when get user by email", err)
 		return EmailReceiveResponse{Success: false}, errors.New(utils.ErrMessageEmailNotExist)
 	}
 

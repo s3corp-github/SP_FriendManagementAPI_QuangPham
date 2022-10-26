@@ -17,7 +17,43 @@ go-chi
 -Relations
 
 ### API ENDPOINTS(localhost:8080)
-    1. Create User:
+    1. Get List User:
+        Path: http:/localhost:8080/users
+        Method: GET
+        Payload:
+            {
+                "email":"test@example.com",
+                "phone":"0123456789",
+                "is_active": true
+            }
+        Success: 200
+            [
+              {
+                  "ID": 1,
+                  "Email": "andy@example.com",
+                  "Phone": "",
+                  "IsActive": false
+              },
+              {
+                  "ID": 2,
+                  "Email": "john@example.com",
+                  "Phone": "",
+                  "IsActive": false
+              },
+              {
+                  "ID": 3,
+                  "Email": "common@example.com",
+                  "Phone": "",
+                  "IsActive": false
+              },
+              {
+                  "ID": 4,
+                  "Email": "lisa@example.com",
+                  "Phone": "",
+                  "IsActive": false
+              }
+            ]
+    2. Create User:
         Path: http:/localhost:8080/users
         Method: Post
         Payload:
@@ -33,7 +69,7 @@ go-chi
                 "Phone": "0123456789",
                 "IsActive": true
             }
-    2. Create friend connection between 2 email
+    3. Create friend connection between 2 email
         Path: http:/localhost:8080/relations/friend
         Method: Post
         Payload:
@@ -47,7 +83,7 @@ go-chi
             {
                 "success":"true"
             }
-    3. Retreive a list  for an email address
+    4. Retreive a list  for an email address
         Path: http:/localhost:8080/relations/friends
         Method: Post
         Payload:
@@ -62,7 +98,7 @@ go-chi
                 ],
                 "count":1
             }
-    4. Retreive common friend list between 2 email address
+    5. Retreive common friend list between 2 email address
         Path: http:/localhost:8080/relations/commonfriends
         Method: Post
         Payload:
@@ -80,7 +116,7 @@ go-chi
                 ],
                 "count":1
             }
-    5. Subcribe to updates from an email
+    6. Subcribe to updates from an email
         Path: http:/localhost:8080/relations/subscription
         Method: Post
         Payload:
@@ -92,7 +128,7 @@ go-chi
             {
                 "success":true
             }
-    6. Block updates from an email
+    7. Block updates from an email
         Path: http:/localhost:8080/relations/block
         Method: Post
         Payload:
@@ -104,7 +140,7 @@ go-chi
             {
                 "success":true
             }
-    7. Retrieve all email address can receive update from an email
+    8. Retrieve all email address can receive update from an email
         Path: http:/localhost:8080/relations/emailreceive
         Method: Post
         Payload: 
@@ -128,7 +164,7 @@ go-chi
     
     2.Run command line: docker compose up
 
-    3.Using postman Create user
+    3.Using postman to get list user 
 
 ### Project architecture
 - Workflow: Request => Internal/API/Rest => Internal/Controller => Internal/Repository => Database

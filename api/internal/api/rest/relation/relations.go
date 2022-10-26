@@ -60,6 +60,7 @@ func (relations RelationsHandler) CreateFriendsRelation(w http.ResponseWriter, r
 
 	input, err := validateRelationInput(relationReq)
 	if err != nil {
+		log.Println("CreateFriendsRelation: error validate input ", err)
 		rest.JsonResponseError(w, err)
 		return
 	}
@@ -86,6 +87,7 @@ func (relations RelationsHandler) GetAllFriendOfUser(w http.ResponseWriter, r *h
 
 	input, err := validateGetRelationInput(getRelationReq)
 	if err != nil {
+		log.Println("GetAllFriendOfUser: error validate input ", err)
 		rest.JsonResponseError(w, err)
 		return
 	}
@@ -100,6 +102,7 @@ func (relations RelationsHandler) GetAllFriendOfUser(w http.ResponseWriter, r *h
 	log.Println("----End API GetAllFriendOfUser----")
 }
 
+// GetCommonFriend end point to get list common friend
 func (relations RelationsHandler) GetCommonFriend(w http.ResponseWriter, r *http.Request) {
 	log.Println("----Start API GetCommonFriend----")
 	getRelationReq := RelationsFriendRequest{}
@@ -111,6 +114,7 @@ func (relations RelationsHandler) GetCommonFriend(w http.ResponseWriter, r *http
 
 	input, err := validateRelationCommonInput(getRelationReq)
 	if err != nil {
+		log.Println("GetCommonFriend: error validate input ", err)
 		rest.JsonResponseError(w, err)
 		return
 	}
@@ -136,6 +140,7 @@ func (relations RelationsHandler) CreateSubscriptionRelation(w http.ResponseWrit
 
 	input, err := validateSubAndBlockRelationInput(relationReq)
 	if err != nil {
+		log.Println("CreateSubscriptionRelation: error validate input ", err)
 		rest.JsonResponseError(w, err)
 		return
 	}
@@ -162,6 +167,7 @@ func (relations RelationsHandler) CreateBlockRelation(w http.ResponseWriter, r *
 
 	input, err := validateSubAndBlockRelationInput(relationReq)
 	if err != nil {
+		log.Println("CreateBlockRelation: error validate input ", err)
 		rest.JsonResponseError(w, err)
 		return
 	}
@@ -188,6 +194,7 @@ func (relations RelationsHandler) GetEmailReceive(w http.ResponseWriter, r *http
 
 	input, err := validateEmailReceiveInput(relationReq)
 	if err != nil {
+		log.Println("GetEmailReceive: error validate input ", err)
 		rest.JsonResponseError(w, err)
 		return
 	}
@@ -202,6 +209,7 @@ func (relations RelationsHandler) GetEmailReceive(w http.ResponseWriter, r *http
 	log.Println("----End API GetEmailReceive----")
 }
 
+// validateRelationInput function validate create relation request
 func validateRelationInput(relationReq RelationsFriendRequest) (relation.CreateRelationsInput, error) {
 	//check of slice of friend is empty
 	if len(relationReq.Friends) < 2 {
@@ -236,6 +244,7 @@ func validateRelationInput(relationReq RelationsFriendRequest) (relation.CreateR
 	}, nil
 }
 
+// validateSubAndBlockRelationInput function validate create sub and block relation request
 func validateSubAndBlockRelationInput(relationReq RelationsSubAndBlockRequest) (relation.CreateRelationsInput, error) {
 
 	requesterEmail := strings.TrimSpace(relationReq.Requester)
@@ -266,6 +275,7 @@ func validateSubAndBlockRelationInput(relationReq RelationsSubAndBlockRequest) (
 	}, nil
 }
 
+// validateGetRelationInput function validate get friend request
 func validateGetRelationInput(relationReq GetRelationRequest) (relation.GetAllFriendsInput, error) {
 	requesterEmail := strings.TrimSpace(relationReq.Email)
 	if requesterEmail == "" {
@@ -280,6 +290,7 @@ func validateGetRelationInput(relationReq GetRelationRequest) (relation.GetAllFr
 	}, nil
 }
 
+// validateRelationCommonInput function validate get common friend request
 func validateRelationCommonInput(relationReq RelationsFriendRequest) (relation.CommonFriendsInput, error) {
 	//check if slice of friend is empty
 	if len(relationReq.Friends) < 2 {

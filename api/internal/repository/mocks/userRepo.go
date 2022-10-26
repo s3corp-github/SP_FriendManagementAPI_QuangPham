@@ -4,7 +4,8 @@ package mocks
 
 import (
 	context "context"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+
+	dbmodels "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -27,6 +28,29 @@ func (_m *UserRepo) CreateUser(ctx context.Context, user dbmodels.User) (dbmodel
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, dbmodels.User) error); ok {
 		r1 = rf(ctx, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAllUser provides a mock function with given fields: ctx
+func (_m *UserRepo) GetAllUser(ctx context.Context) ([]string, error) {
+	ret := _m.Called(ctx)
+
+	var r0 []string
+	if rf, ok := ret.Get(0).(func(context.Context) []string); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}

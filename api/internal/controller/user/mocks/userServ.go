@@ -4,7 +4,8 @@ package mocks
 
 import (
 	context "context"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/user"
+
+	user "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/user"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -27,6 +28,27 @@ func (_m *UserServ) CreateUser(ctx context.Context, input user.CreateUserInput) 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, user.CreateUserInput) error); ok {
 		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetListUser provides a mock function with given fields: ctx
+func (_m *UserServ) GetListUser(ctx context.Context) (user.UserEmailResponse, error) {
+	ret := _m.Called(ctx)
+
+	var r0 user.UserEmailResponse
+	if rf, ok := ret.Get(0).(func(context.Context) user.UserEmailResponse); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(user.UserEmailResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}

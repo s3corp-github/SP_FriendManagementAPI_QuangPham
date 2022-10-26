@@ -64,3 +64,47 @@ func TestService_CreateUser(t *testing.T) {
 	}
 
 }
+
+func TestService_GetAllUser(t *testing.T) {
+	tcs := map[string]struct {
+		expResult     UserEmailResponse
+		expResultRepo []string
+		expErr        error
+	}{
+		"success": {
+			expResult: UserEmailResponse{
+				Email: []string{
+					"andy@example.com",
+					"john@example.com",
+					"common@example.com",
+					"lisa@example.com",
+				},
+			},
+			expResultRepo: []string{
+				"andy@example.com",
+				"john@example.com",
+				"common@example.com",
+				"lisa@example.com",
+			},
+		},
+	}
+
+	for desc, tc := range tcs {
+		t.Run(desc, func(t *testing.T) {
+			ctx := context.Background()
+			mockRepo := new(mocks.UserRepo)
+			mockRepo.On("GetAllUser", mock.Anything, mock.Anything).
+				Return(tc.expResultRepo, tc.expErr)
+
+			userService := UserService{mockRepo}
+			res, err := userService.GetListUser(ctx)
+			if tc.expErr != nil {
+				require.EqualError(t, err, tc.expErr.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expResult, res)
+			}
+		})
+	}
+
+}
