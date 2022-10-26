@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"database/sql"
-
 	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"

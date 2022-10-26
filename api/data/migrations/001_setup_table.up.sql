@@ -26,10 +26,10 @@ INSERT INTO "public"."users" ("id",
                               "email",
                               "phone",
                               "is_active")
-VALUES (1, 'andy@example.com', '123456', 'true'),
-       (2, 'john@example.com', '123456', 'true'),
-       (3, 'common@example.com', '123456', 'true'),
-       (4, 'lisa@example.com', '123456', 'true');
+VALUES (10000, 'andy@example.com', '123456', 'true'),
+       (10001, 'john@example.com', '123456', 'true'),
+       (10003, 'common@example.com', '123456', 'true'),
+       (10004, 'lisa@example.com', '123456', 'true');
 
 COMMIT;
 
