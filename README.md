@@ -97,7 +97,7 @@ go-chi
         Method: Post
         Payload:
             {
-                "requestor":"andy@example.com",
+                "requester":"andy@example.com",
                 "target":"lisa@example.com"
             }
         Success: 201
@@ -109,7 +109,7 @@ go-chi
         Method: Post
         Payload:
             {
-                "requestor":"andy@example.com",
+                "requester":"andy@example.com",
                 "target":"lisa@example.com"
             }
         Success: 201
