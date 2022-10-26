@@ -1,6 +1,10 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"log"
+
+	"github.com/spf13/viper"
+)
 
 // Config store all configuration of the application
 // The value are readby viper from the congfig file
@@ -10,19 +14,45 @@ type Config struct {
 	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
 }
 
-func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env")
+const (
+	// EnvPath Path env file
+	EnvPath = "."
+	// ConfigName env file name
+	ConfigName = "app"
+	// ConfigExtension  env file extension
+	ConfigExtension = "env"
+)
+
+// LoadConfig config value from env file
+func LoadConfig() (Config, error) {
+	viper.AddConfigPath(EnvPath)
+	viper.SetConfigName(ConfigName)
+	viper.SetConfigType(ConfigExtension)
 
 	viper.AutomaticEnv()
 
-	err = viper.ReadInConfig()
-
-	if err != nil {
-		return
+	if err := viper.ReadInConfig(); err != nil {
+		return Config{}, err
 	}
 
-	err = viper.Unmarshal(&config)
-	return
+	var config Config
+	err := viper.Unmarshal(&config)
+	if err != nil {
+		return Config{}, err
+	}
+
+	// re-validate
+	if config.DBDriver == "" {
+		log.Fatal("Cannot load DBDriver from config file.")
+	}
+
+	if config.ServerAddress == "" {
+		log.Fatal("Cannot load ServerAddress from config file.")
+	}
+
+	if config.DBSource == "" {
+		log.Fatal("Cannot load DBSource from config file.")
+	}
+
+	return config, nil
 }

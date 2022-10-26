@@ -8,4 +8,5 @@ const (
 	ErrMessageCanNotBeBlank             = "Email cannot be empty"
 	ErrMessageSlideCannotEmpty          = "Slice of emails cannot empty"
 	ErrMessageEmailNotExist             = "Email not exist"
+	ErrMessageUnableCreateRelation      = "Unable to create relation"
 )

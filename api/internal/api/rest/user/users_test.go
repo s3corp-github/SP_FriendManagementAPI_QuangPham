@@ -29,7 +29,7 @@ func TestHandler_CreateUser(t *testing.T) {
 			input:   `{"email":"", "phone":"031544284", "is_active": false}`,
 			expBody: "{\"message\":\"Email cannot be empty\"}\n",
 			expCode: http.StatusBadRequest,
-			expErr:  rest.ErrNameCannotBeBlank,
+			expErr:  rest.ErrNameInvalid,
 		},
 	}
 

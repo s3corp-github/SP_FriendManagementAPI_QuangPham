@@ -15,6 +15,8 @@ type UserRepo interface {
 	GetUserIDsByEmail(ctx context.Context, email []string) ([]int, error)
 
 	GetListEmailByIDs(ctx context.Context, ids []int) ([]string, error)
+
+	GetAllUser(ctx context.Context) (dbmodels.UserSlice, error)
 }
 
 type RelationsRepo interface {

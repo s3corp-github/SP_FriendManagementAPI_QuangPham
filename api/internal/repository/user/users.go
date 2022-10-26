@@ -97,3 +97,16 @@ func (repo userRepository) GetUserIDsByEmail(ctx context.Context, emails []strin
 
 	return result, nil
 }
+
+func (repo userRepository) GetAllUser(ctx context.Context) (models.UserSlice, error) {
+
+	userResult, err := models.Users(
+		qm.Select(models.UserColumns.ID, models.UserColumns.Email),
+	).All(ctx, repo.connection)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return userResult, nil
+}
