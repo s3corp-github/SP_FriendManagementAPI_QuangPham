@@ -1,9 +1,9 @@
-package errors
+package rest
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 	"net/http"
 )
 

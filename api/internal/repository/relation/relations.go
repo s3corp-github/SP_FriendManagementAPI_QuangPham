@@ -3,14 +3,15 @@ package relation
 import (
 	"context"
 	"database/sql"
+	"log"
+
 	"github.com/friendsofgo/errors"
-	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
-	"github.com/quangpham789/golang-assessment/api/internal/repository"
-	models "github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"log"
 )
 
 type relationsRepository struct {

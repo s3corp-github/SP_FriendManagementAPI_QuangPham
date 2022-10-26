@@ -3,13 +3,14 @@ package relation
 import (
 	"context"
 	"database/sql"
-	"github.com/friendsofgo/errors"
-	"github.com/quangpham789/golang-assessment/api/internal/pkg/utils"
-	"github.com/quangpham789/golang-assessment/api/internal/repository"
-	models "github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
-	"github.com/quangpham789/golang-assessment/api/internal/repository/relation"
-	"github.com/quangpham789/golang-assessment/api/internal/repository/user"
 	"log"
+
+	"github.com/friendsofgo/errors"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/relation"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/user"
 )
 
 var (
@@ -60,6 +61,7 @@ type FriendListResponse struct {
 	Count   int      `json:"count"`
 }
 
+// EmailReceiveResponse response for API email receive
 type EmailReceiveResponse struct {
 	Success    bool     `json:"success"`
 	Recipients []string `json:"recipients"`
@@ -138,9 +140,7 @@ func (serv RelationsService) CreateFriendRelation(ctx context.Context, input Cre
 		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailNotExist)
 	}
 
-	//check if user blocked or user is friend return false
 	isValid, err := isValidToCreateRelationFunc(ctx, serv.relationsRepository, requester.ID, addressee.ID, utils.FriendRelation)
-	//if user has relation block or friend return false
 	if !isValid || err != nil {
 		return CreateRelationsResponse{Success: false}, err
 	}
@@ -209,6 +209,7 @@ func (serv RelationsService) GetCommonFriendList(ctx context.Context, input Comm
 
 }
 
+// isRelationExist function check relation is exists
 func isRelationExist(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
 	isExistRelation, err := repo.IsRelationExist(ctx, requesterID, addresseeID, relationType)
 	if err != nil {
@@ -219,6 +220,7 @@ func isRelationExist(ctx context.Context, repo repository.RelationsRepo, request
 	return isExistRelation, nil
 }
 
+// isRelationExist function check valid to create relation
 func isValidToCreateRelation(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
 	isExistRelation, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, relationType)
 
@@ -260,6 +262,7 @@ func isValidToCreateRelation(ctx context.Context, repo repository.RelationsRepo,
 	return isValid, nil
 }
 
+// CreateSubscriptionRelation function create subscription relation
 func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error) {
 	//get requesterId from email request
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.RequesterEmail)
@@ -268,11 +271,21 @@ func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, inp
 		return CreateRelationsResponse{Success: false}, err
 	}
 
+	if requester.Email == "" {
+		log.Println("CreateSubscriptionRelation: error email requester not exist ", err)
+		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageRequesterEmailNotExist)
+	}
+
 	//get addresseeId from email request
 	target, err := serv.userRepository.GetUserByEmail(ctx, input.AddresseeEmail)
 	if err != nil {
 		log.Println("CreateFriendRelation: error get email from request ", err)
 		return CreateRelationsResponse{Success: false}, err
+	}
+
+	if target.Email == "" {
+		log.Println("CreateSubscriptionRelation: error email target not exist ", err)
+		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailNotExist)
 	}
 
 	//check if user blocked or user is friend return false
@@ -298,6 +311,7 @@ func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, inp
 	return CreateRelationsResponse{Success: result}, nil
 }
 
+// CreateBlockRelation function create block relation
 func (serv RelationsService) CreateBlockRelation(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error) {
 	//get requesterId from email request
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.RequesterEmail)
@@ -343,6 +357,7 @@ func (serv RelationsService) CreateBlockRelation(ctx context.Context, input Crea
 	return CreateRelationsResponse{Success: result}, nil
 }
 
+// GetEmailReceive function email receive info
 func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailReceiveInput) (EmailReceiveResponse, error) {
 	//get requesterId from email request
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.Sender)

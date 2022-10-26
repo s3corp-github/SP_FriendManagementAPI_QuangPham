@@ -2,8 +2,8 @@ package user
 
 import (
 	"context"
-	"github.com/quangpham789/golang-assessment/api/internal/repository/mocks"
-	models "github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/mocks"
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"

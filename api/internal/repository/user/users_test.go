@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 	"github.com/friendsofgo/errors"
-	"github.com/quangpham789/golang-assessment/api/internal/config/db"
-	models "github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/config/db"
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
 	"testing"
@@ -40,9 +40,6 @@ func TestRepository_CreateUser(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.users;")
-
-			// TODO: Load DB user test sql
 
 			userRepo := NewUserRepository(dbConn)
 			res, err := userRepo.CreateUser(ctx, tc.input)
@@ -131,9 +128,6 @@ func TestRepository_GetUserByID(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.users;")
-
-			// TODO: Load DB user test sql
 
 			userRepo := NewUserRepository(dbConn)
 			res, err := userRepo.GetUserByID(ctx, tc.input)
@@ -175,9 +169,6 @@ func TestRepository_GetUserIDsByEmail(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.users;")
-
-			// TODO: Load DB user test sql
 
 			userRepo := NewUserRepository(dbConn)
 			res, err := userRepo.GetUserIDsByEmail(ctx, tc.input)

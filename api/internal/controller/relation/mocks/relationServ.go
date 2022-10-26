@@ -4,7 +4,7 @@ package mocks
 
 import (
 	context "context"
-	"github.com/quangpham789/golang-assessment/api/internal/controller/relation"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/relation"
 	mock "github.com/stretchr/testify/mock"
 )
 

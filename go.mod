@@ -1,4 +1,4 @@
-module github.com/quangpham789/golang-assessment
+module github.com/s3corp-github/SP_FriendManagementAPI_QuangPham
 
 go 1.19
 

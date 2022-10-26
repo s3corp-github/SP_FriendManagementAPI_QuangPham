@@ -3,26 +3,31 @@ package user
 import (
 	"context"
 	"database/sql"
-	"github.com/quangpham789/golang-assessment/api/internal/repository"
-	models "github.com/quangpham789/golang-assessment/api/internal/repository/orm/models"
-	"github.com/quangpham789/golang-assessment/api/internal/repository/user"
+
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/user"
 	"github.com/volatiletech/null/v8"
 )
 
+// UserService type contain user repository
 type UserService struct {
 	userRepository repository.UserRepo
 }
 
+// UserServ define function of user
 type UserServ interface {
 	CreateUser(ctx context.Context, input CreateUserInput) (UserResponse, error)
 }
 
+// CreateUserInput param using create user
 type CreateUserInput struct {
 	Email    string
 	Phone    string
 	IsActive bool
 }
 
+// UserResponse response api create user
 type UserResponse struct {
 	ID       int
 	Email    string
@@ -30,6 +35,7 @@ type UserResponse struct {
 	IsActive bool
 }
 
+// NewUserService create new user service
 func NewUserService(db *sql.DB) UserServ {
 	return UserService{
 		userRepository: user.NewUserRepository(db),
