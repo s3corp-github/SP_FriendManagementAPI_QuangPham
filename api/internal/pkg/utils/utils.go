@@ -8,9 +8,6 @@ import (
 	"regexp"
 )
 
-type Utils struct {
-}
-
 // Intersection find the same elements of two array
 func Intersection(a, b []int) (c []int) {
 	m := make(map[int]bool)
