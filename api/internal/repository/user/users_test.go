@@ -2,12 +2,14 @@ package user
 
 import (
 	"context"
+	"testing"
+
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+
 	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/config/db"
-	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
-	"testing"
 )
 
 var dbURL = "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
@@ -208,7 +210,6 @@ func TestRepository_GetListUser(t *testing.T) {
 			dbConn, err := db.ConnectDB(dbDriver, dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
-			//defer dbConn.Exec("DELETE FROM public.users;")
 
 			userRepo := NewUserRepository(dbConn)
 			res, err := userRepo.GetAllUser(ctx)

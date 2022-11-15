@@ -2,18 +2,20 @@ package user
 
 import (
 	"context"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/mocks"
+	"testing"
+
 	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
-	"testing"
 )
 
 func TestService_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
 		input     CreateUserInput
-		expResult UserResponse
+		expResult UsersResponse
 		expErr    error
 	}{
 		"success": {
@@ -22,7 +24,7 @@ func TestService_CreateUser(t *testing.T) {
 				Phone:    "123456",
 				IsActive: true,
 			},
-			expResult: UserResponse{
+			expResult: UsersResponse{
 				ID:       15,
 				Email:    "nhutquang23@gmail.com",
 				Phone:    "123456",
@@ -52,7 +54,7 @@ func TestService_CreateUser(t *testing.T) {
 			mockRepo.On("CreateUser", mock.Anything, mock.Anything).
 				Return(tcMockUserRepo[desc].result, tcMockUserRepo[desc].err)
 
-			userService := UserService{mockRepo}
+			userService := UsersService{mockRepo}
 			res, err := userService.CreateUser(ctx, tc.input)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -67,12 +69,12 @@ func TestService_CreateUser(t *testing.T) {
 
 func TestService_GetAllUser(t *testing.T) {
 	tcs := map[string]struct {
-		expResult     UserEmailResponse
+		expResult     UsersEmailResponse
 		expResultRepo []string
 		expErr        error
 	}{
 		"success": {
-			expResult: UserEmailResponse{
+			expResult: UsersEmailResponse{
 				Email: []string{
 					"andy@example.com",
 					"john@example.com",
@@ -96,7 +98,7 @@ func TestService_GetAllUser(t *testing.T) {
 			mockRepo.On("GetAllUser", mock.Anything, mock.Anything).
 				Return(tc.expResultRepo, tc.expErr)
 
-			userService := UserService{mockRepo}
+			userService := UsersService{mockRepo}
 			res, err := userService.GetListUser(ctx)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())

@@ -2,15 +2,17 @@ package relation
 
 import (
 	"context"
+	"testing"
+
+	utilsmock "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils/mocks"
+	repomock "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/mocks"
+
 	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
-	mocksutils "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils/mocks"
-	mocksrepo "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/mocks"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
-	"testing"
 )
 
 type mockIsRelation struct {
@@ -48,7 +50,7 @@ func TestService_IsRelationExist(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockRelationRepo := new(mocksrepo.RelationsRepo)
+			mockRelationRepo := new(repomock.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, tc.requesterID, tc.addresseeID, tc.relationType).
 				Return(tc.isExistMock, tc.expErr)
 
@@ -187,13 +189,13 @@ func TestService_CreateFriendRelation(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocksrepo.UserRepo)
+			mockUserRepo := new(repomock.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocksrepo.RelationsRepo)
+			mockRelationRepo := new(repomock.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
@@ -257,10 +259,10 @@ func TestService_GetAllFriendsOfUser(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocksrepo.UserRepo)
+			mockUserRepo := new(repomock.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.Email).
 				Return(tc.expUserByEmailMock, tc.expErr)
-			mockRelationRepo := new(mocksrepo.RelationsRepo)
+			mockRelationRepo := new(repomock.RelationsRepo)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock.ID, 1).
 				Return(tc.expRelationIDsOfUser, tc.expErr)
 			mockUserRepo.On("GetListEmailByIDs", mock.Anything, mock.Anything).
@@ -358,26 +360,26 @@ func TestService_GetCommonFriendList(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocksrepo.UserRepo)
+			mockUserRepo := new(repomock.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.FirstEmail).
 				Return(tc.expUserByEmailMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.SecondEmail).
 				Return(tc.expUserByEmailMock2, tc.expErr)
 
-			mockRelationRepo := new(mocksrepo.RelationsRepo)
+			mockRelationRepo := new(repomock.RelationsRepo)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock1.ID, 1).
 				Return(tc.expIdsFirstEmail, tc.expErr)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock2.ID, 1).
 				Return(tc.expIdsSecondEmail, tc.expErr)
 
-			mockUtils := new(mocksutils.UtilsInf)
+			mockUtils := new(utilsmock.UtilsInf)
 			mockUtils.On("Intersection", tc.expIdsFirstEmail, tc.expIdsSecondEmail).
 				Return(tc.expIntersectionIDs, tc.expErr)
 
 			mockUserRepo.On("GetListEmailByIDs", mock.Anything, mock.Anything).
 				Return(tc.expListEmail, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo, utils: mockUtils}
+			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
 			res, err := relationService.GetCommonFriendList(ctx, tc.input)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -511,13 +513,13 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocksrepo.UserRepo)
+			mockUserRepo := new(repomock.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocksrepo.RelationsRepo)
+			mockRelationRepo := new(repomock.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
@@ -659,13 +661,13 @@ func TestService_CreateBlockRelation(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocksrepo.UserRepo)
+			mockUserRepo := new(repomock.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocksrepo.RelationsRepo)
+			mockRelationRepo := new(repomock.RelationsRepo)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
@@ -730,17 +732,17 @@ func TestService_GetEmailReceive(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocksrepo.UserRepo)
+			mockUserRepo := new(repomock.UserRepo)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.Sender).
 				Return(tc.expUserByEmailMock, tc.expErr)
 
-			mockRelationRepo := new(mocksrepo.RelationsRepo)
+			mockRelationRepo := new(repomock.RelationsRepo)
 			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock.ID, 1).
 				Return(tc.expIdsEmail, tc.expErr)
 			mockRelationRepo.On("GetRequesterIDRelation", mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.expRequesterIdsRelation, tc.expErr)
 
-			mockUtils := new(mocksutils.UtilsInf)
+			mockUtils := new(utilsmock.UtilsInf)
 			mockUtils.On("FindEmailFromText", tc.input.Text).
 				Return(tc.expListEmail, tc.expErr)
 
@@ -756,7 +758,7 @@ func TestService_GetEmailReceive(t *testing.T) {
 			mockUserRepo.On("GetListEmailByIDs", mock.Anything, tc.expReceiveIDs).
 				Return(tc.expListEmailResult, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo, utils: mockUtils}
+			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
 			res, err := relationService.GetEmailReceive(ctx, tc.input)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())

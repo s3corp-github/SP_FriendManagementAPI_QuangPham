@@ -1,17 +1,19 @@
 package relation
 
 import (
-	"github.com/friendsofgo/errors"
-	customerrors "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/api/rest"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/relation"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/relation/mocks"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	customer "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/api/rest"
+
+	"github.com/friendsofgo/errors"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/relation"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/relation/mocks"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandler_CreateFriendsRelation(t *testing.T) {
@@ -51,7 +53,7 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrEmailCannotBeBlank,
+				expErr:   customer.ErrEmailCannotBeBlank,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -64,7 +66,7 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrInvalidEmail,
+				expErr:   customer.ErrInvalidEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -77,7 +79,7 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrRequesterEmailAndAddresseeEmail,
+				expErr:   customer.ErrRequesterEmailAndAddresseeEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -90,7 +92,7 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   errors.New(utils.ErrMessageRequesterEmailNotExist),
+				expErr:   errors.New(controller.ErrMessageRequesterEmailNotExist),
 			},
 			expCode: http.StatusInternalServerError,
 		},
@@ -160,13 +162,13 @@ func TestHandler_validateRelationInput(t *testing.T) {
 			input: RelationsFriendRequest{
 				Friends: []string{"", "common@example.com"},
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 		"invalidEmail": {
 			input: RelationsFriendRequest{
 				Friends: []string{"andyexample.com", "common@example.com"},
 			},
-			expErr: customerrors.ErrInvalidEmail,
+			expErr: customer.ErrInvalidEmail,
 		},
 	}
 
@@ -203,35 +205,35 @@ func TestHandler_validateSubAndBlockRelationInput(t *testing.T) {
 			input: RelationsSubAndBlockRequest{
 				Requester: "andy@example.com",
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 		"case requester email invalidEmail": {
 			input: RelationsSubAndBlockRequest{
 				Requester: "andyexample.com",
 				Target:    "john@example.com",
 			},
-			expErr: customerrors.ErrInvalidEmail,
+			expErr: customer.ErrInvalidEmail,
 		},
 		"case requester email is empty": {
 			input: RelationsSubAndBlockRequest{
 				Requester: "",
 				Target:    "john@example.com",
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 		"case addressee email is empty": {
 			input: RelationsSubAndBlockRequest{
 				Requester: "andy@example.com",
 				Target:    "",
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 		"case addressee email invalidEmail": {
 			input: RelationsSubAndBlockRequest{
 				Requester: "andy@example.com",
 				Target:    "johnexample.com",
 			},
-			expErr: customerrors.ErrInvalidEmail,
+			expErr: customer.ErrInvalidEmail,
 		},
 	}
 
@@ -266,13 +268,13 @@ func TestHandler_validateGetRelationInput(t *testing.T) {
 			input: GetRelationRequest{
 				Email: "",
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 		"case requester email invalidEmail": {
 			input: GetRelationRequest{
 				Email: "andyexample.com",
 			},
-			expErr: customerrors.ErrInvalidEmail,
+			expErr: customer.ErrInvalidEmail,
 		},
 	}
 
@@ -307,31 +309,31 @@ func TestHandler_validateRelationCommonInput(t *testing.T) {
 			input: RelationsFriendRequest{
 				Friends: []string{"john@example.com"},
 			},
-			expErr: customerrors.ErrDataIsEmpty,
+			expErr: customer.ErrDataIsEmpty,
 		},
 		"case requester email invalidEmail": {
 			input: RelationsFriendRequest{
 				Friends: []string{"andyexample.com", "john@example.com"},
 			},
-			expErr: customerrors.ErrInvalidEmail,
+			expErr: customer.ErrInvalidEmail,
 		},
 		"case requester email is empty": {
 			input: RelationsFriendRequest{
 				Friends: []string{"", "john@example.com"},
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 		"case addressee email is empty": {
 			input: RelationsFriendRequest{
 				Friends: []string{"andy@example.com", ""},
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 		"case addressee email invalidEmail": {
 			input: RelationsFriendRequest{
 				Friends: []string{"andy@example.com", "johnexample.com"},
 			},
-			expErr: customerrors.ErrInvalidEmail,
+			expErr: customer.ErrInvalidEmail,
 		},
 	}
 
@@ -370,14 +372,14 @@ func TestHandler_validateEmailReceiveInput(t *testing.T) {
 				Sender: "andyexample.com",
 				Text:   "Hello World! kate@example.com",
 			},
-			expErr: customerrors.ErrInvalidEmail,
+			expErr: customer.ErrInvalidEmail,
 		},
 		"case sender email is empty": {
 			input: EmailReceiveRequest{
 				Sender: "",
 				Text:   "Hello World! kate@example.com",
 			},
-			expErr: customerrors.ErrEmailCannotBeBlank,
+			expErr: customer.ErrEmailCannotBeBlank,
 		},
 	}
 
@@ -431,7 +433,7 @@ func TestHandler_GetAllFriendOfUser(t *testing.T) {
 					Email: "",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrEmailCannotBeBlank,
+				expErr:   customer.ErrEmailCannotBeBlank,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -443,7 +445,7 @@ func TestHandler_GetAllFriendOfUser(t *testing.T) {
 					Email: "andyexample.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrInvalidEmail,
+				expErr:   customer.ErrInvalidEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -535,7 +537,7 @@ func TestHandler_GetCommonFriend(t *testing.T) {
 					SecondEmail: "john@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrEmailCannotBeBlank,
+				expErr:   customer.ErrEmailCannotBeBlank,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -548,7 +550,7 @@ func TestHandler_GetCommonFriend(t *testing.T) {
 					SecondEmail: "john@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrInvalidEmail,
+				expErr:   customer.ErrInvalidEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -625,7 +627,7 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrEmailCannotBeBlank,
+				expErr:   customer.ErrEmailCannotBeBlank,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -638,7 +640,7 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrInvalidEmail,
+				expErr:   customer.ErrInvalidEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -651,7 +653,7 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrRequesterEmailAndAddresseeEmail,
+				expErr:   customer.ErrRequesterEmailAndAddresseeEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -664,7 +666,7 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   errors.New(utils.ErrMessageRequesterEmailNotExist),
+				expErr:   errors.New(controller.ErrMessageRequesterEmailNotExist),
 			},
 			expCode: http.StatusInternalServerError,
 		},
@@ -754,7 +756,7 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrEmailCannotBeBlank,
+				expErr:   customer.ErrEmailCannotBeBlank,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -767,7 +769,7 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrInvalidEmail,
+				expErr:   customer.ErrInvalidEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -780,7 +782,7 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrRequesterEmailAndAddresseeEmail,
+				expErr:   customer.ErrRequesterEmailAndAddresseeEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -793,7 +795,7 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 					AddresseeEmail: "common@example.com",
 				},
 				wantCall: true,
-				expErr:   errors.New(utils.ErrMessageRequesterEmailNotExist),
+				expErr:   errors.New(controller.ErrMessageRequesterEmailNotExist),
 			},
 			expCode: http.StatusInternalServerError,
 		},
@@ -886,7 +888,7 @@ func TestHandler_GetEmailReceive(t *testing.T) {
 					Text:   "Hello World! lisa@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrEmailCannotBeBlank,
+				expErr:   customer.ErrEmailCannotBeBlank,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -899,7 +901,7 @@ func TestHandler_GetEmailReceive(t *testing.T) {
 					Text:   "Hello World! lisa@example.com",
 				},
 				wantCall: true,
-				expErr:   customerrors.ErrInvalidEmail,
+				expErr:   customer.ErrInvalidEmail,
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -912,7 +914,7 @@ func TestHandler_GetEmailReceive(t *testing.T) {
 					Text:   "Hello World! lisa@example.com",
 				},
 				wantCall: true,
-				expErr:   errors.New(utils.ErrMessageEmailNotExist),
+				expErr:   errors.New(controller.ErrMessageEmailNotExist),
 			},
 			expCode: http.StatusInternalServerError,
 		},

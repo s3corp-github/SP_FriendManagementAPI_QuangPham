@@ -3,10 +3,11 @@ package user
 import (
 	"context"
 	"database/sql"
-	"github.com/friendsofgo/errors"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
+
 	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+
+	"github.com/friendsofgo/errors"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -58,7 +59,7 @@ func (repo userRepository) CreateUser(ctx context.Context, user models.User) (mo
 // GetUserByEmail get user by email
 func (repo userRepository) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
 	if email == "" {
-		return models.User{}, errors.New(utils.ErrMessageCanNotBeBlank)
+		return models.User{}, errors.New(repository.ErrMessageCanNotBeBlank)
 	}
 	var userResult models.User
 	if err := models.Users(models.UserWhere.Email.EQ(email)).Bind(ctx, repo.connection, &userResult); err != nil {
@@ -70,7 +71,7 @@ func (repo userRepository) GetUserByEmail(ctx context.Context, email string) (mo
 func (repo userRepository) GetUserIDsByEmail(ctx context.Context, emails []string) ([]int, error) {
 
 	if len(emails) == 0 {
-		return nil, errors.New(utils.ErrMessageSlideCannotEmpty)
+		return nil, errors.New(repository.ErrMessageSlideCannotEmpty)
 	}
 
 	args := make([]interface{}, len(emails))

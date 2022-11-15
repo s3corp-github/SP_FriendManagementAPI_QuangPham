@@ -15,14 +15,14 @@ type UserServ struct {
 }
 
 // CreateUser provides a mock function with given fields: ctx, input
-func (_m *UserServ) CreateUser(ctx context.Context, input user.CreateUserInput) (user.UserResponse, error) {
+func (_m *UserServ) CreateUser(ctx context.Context, input user.CreateUserInput) (user.UserRsesponse, error) {
 	ret := _m.Called(ctx, input)
 
-	var r0 user.UserResponse
-	if rf, ok := ret.Get(0).(func(context.Context, user.CreateUserInput) user.UserResponse); ok {
+	var r0 user.UserRsesponse
+	if rf, ok := ret.Get(0).(func(context.Context, user.CreateUserInput) user.UserRsesponse); ok {
 		r0 = rf(ctx, input)
 	} else {
-		r0 = ret.Get(0).(user.UserResponse)
+		r0 = ret.Get(0).(user.UserRsesponse)
 	}
 
 	var r1 error
@@ -36,14 +36,14 @@ func (_m *UserServ) CreateUser(ctx context.Context, input user.CreateUserInput) 
 }
 
 // GetListUser provides a mock function with given fields: ctx
-func (_m *UserServ) GetListUser(ctx context.Context) (user.UserEmailResponse, error) {
+func (_m *UserServ) GetListUser(ctx context.Context) (user.UsersEmailResponse, error) {
 	ret := _m.Called(ctx)
 
-	var r0 user.UserEmailResponse
-	if rf, ok := ret.Get(0).(func(context.Context) user.UserEmailResponse); ok {
+	var r0 user.UsersEmailResponse
+	if rf, ok := ret.Get(0).(func(context.Context) user.UsersEmailResponse); ok {
 		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(user.UserEmailResponse)
+		r0 = ret.Get(0).(user.UsersEmailResponse)
 	}
 
 	var r1 error

@@ -7,7 +7,7 @@ import (
 )
 
 // Config store all configuration of the application
-// The value are readby viper from the congfig file
+// The value are read by viper from the congfig file
 type Config struct {
 	DBDriver      string `mapstructure:"DB_DRIVER"`
 	DBSource      string `mapstructure:"DB_SOURCE"`

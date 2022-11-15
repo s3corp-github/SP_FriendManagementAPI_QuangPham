@@ -4,21 +4,22 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
 	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/user"
 	"github.com/volatiletech/null/v8"
 )
 
-// UserService type contain user repository
-type UserService struct {
+// UsersService type contain user repository
+type UsersService struct {
 	userRepository repository.UserRepo
 }
 
-// UserServ define function of user
-type UserServ interface {
-	CreateUser(ctx context.Context, input CreateUserInput) (UserResponse, error)
-	GetListUser(ctx context.Context) (UserEmailResponse, error)
+// UsersServ define function of user
+type UsersServ interface {
+	CreateUser(ctx context.Context, input CreateUserInput) (UsersResponse, error)
+	GetListUser(ctx context.Context) (UsersEmailResponse, error)
 }
 
 // CreateUserInput param using create user
@@ -28,38 +29,38 @@ type CreateUserInput struct {
 	IsActive bool
 }
 
-// UserResponse response api create user
-type UserResponse struct {
+// UsersResponse response api create user
+type UsersResponse struct {
 	ID       int
 	Email    string
 	Phone    string
 	IsActive bool
 }
 
-// UserEmailResponse type list email of user
-type UserEmailResponse struct {
+// UsersEmailResponse type list email of user
+type UsersEmailResponse struct {
 	Email []string
 }
 
 // NewUserService create new user service
-func NewUserService(db *sql.DB) UserServ {
-	return UserService{
+func NewUserService(db *sql.DB) UsersServ {
+	return UsersService{
 		userRepository: user.NewUserRepository(db),
 	}
 }
 
 // CreateUser creates new user
-func (serv UserService) CreateUser(ctx context.Context, input CreateUserInput) (UserResponse, error) {
+func (serv UsersService) CreateUser(ctx context.Context, input CreateUserInput) (UsersResponse, error) {
 	user, err := serv.userRepository.CreateUser(ctx, models.User{
 		Email:    input.Email,
 		Phone:    null.StringFrom(input.Phone),
 		IsActive: null.BoolFrom(input.IsActive),
 	})
 	if err != nil {
-		return UserResponse{}, err
+		return UsersResponse{}, err
 	}
 
-	return UserResponse{
+	return UsersResponse{
 		ID:       user.ID,
 		Email:    user.Email,
 		Phone:    user.Phone.String,
@@ -68,11 +69,11 @@ func (serv UserService) CreateUser(ctx context.Context, input CreateUserInput) (
 }
 
 // GetListUser return list of user
-func (serv UserService) GetListUser(ctx context.Context) (UserEmailResponse, error) {
-	var userResult UserEmailResponse
+func (serv UsersService) GetListUser(ctx context.Context) (UsersEmailResponse, error) {
+	var userResult UsersEmailResponse
 	user, err := serv.userRepository.GetAllUser(ctx)
 	if err != nil {
-		return UserEmailResponse{}, err
+		return UsersEmailResponse{}, err
 	}
 
 	userResult.Email = user

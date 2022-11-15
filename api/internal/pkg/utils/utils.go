@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -8,15 +10,9 @@ import (
 
 type Utils struct {
 }
-type UtilsInf interface {
-	Intersection(a, b []int) (c []int)
-	FindEmailFromText(text string) []string
-	GetReceiverID(a, b []int) (c []int)
-	UniqueSlice(intSlice []int) []int
-}
 
 // Intersection find the same elements of two array
-func (u Utils) Intersection(a, b []int) (c []int) {
+func Intersection(a, b []int) (c []int) {
 	m := make(map[int]bool)
 
 	for _, item := range a {
@@ -32,7 +28,7 @@ func (u Utils) Intersection(a, b []int) (c []int) {
 }
 
 // FindEmailFromText return email mentioned in text
-func (u Utils) FindEmailFromText(text string) []string {
+func FindEmailFromText(text string) []string {
 
 	regex := regexp.MustCompile(EmailValidationRegex)
 
@@ -47,9 +43,9 @@ func (u Utils) FindEmailFromText(text string) []string {
 }
 
 // GetReceiverID get slice of receiver id
-func (u Utils) GetReceiverID(a, b []int) (c []int) {
+func GetReceiverID(a, b []int) (c []int) {
 
-	sameElements := u.Intersection(a, b)
+	sameElements := Intersection(a, b)
 
 	for _, v := range sameElements {
 		a = removeIndex(a, indexOf(v, a))
@@ -74,7 +70,7 @@ func indexOf(element int, data []int) int {
 }
 
 // UniqueSlice remove duplicate element in slice
-func (u Utils) UniqueSlice(intSlice []int) []int {
+func UniqueSlice(intSlice []int) []int {
 	keys := make(map[int]bool)
 	var list []int
 
@@ -93,4 +89,43 @@ func LogRequest(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
+}
+
+type RespError struct {
+	Code    int
+	Message string
+}
+
+type Response struct {
+	Message string `json:"message"`
+}
+
+func ResponseJson(w http.ResponseWriter, httpCode int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpCode)
+	json.NewEncoder(w).Encode(data)
+}
+
+func (r RespError) Error() string {
+	return fmt.Sprintf("%d: %s", r.Code, r.Message)
+}
+
+func InternalServerError(msg string) error {
+	return RespError{
+		Code:    http.StatusInternalServerError,
+		Message: msg,
+	}
+}
+
+func JsonResponseError(w http.ResponseWriter, err error) {
+	if _, ok := err.(RespError); !ok {
+		err = InternalServerError(err.Error())
+	}
+	error, _ := err.(RespError)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(error.Code)
+	res := Response{
+		Message: error.Message,
+	}
+	json.NewEncoder(w).Encode(res)
 }

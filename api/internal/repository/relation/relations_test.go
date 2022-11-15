@@ -2,12 +2,14 @@ package relation
 
 import (
 	"context"
+	"testing"
+
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+
 	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/config/db"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
-	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var dbURL = "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
@@ -119,7 +121,6 @@ func TestRepository_GetRelationIDsOfUser(t *testing.T) {
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
-				//tc.expResult = res
 				require.NoError(t, err)
 				require.Equal(t, tc.expResult, res)
 			}
@@ -164,7 +165,6 @@ func TestRepository_GetRequesterIDRelation(t *testing.T) {
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
-				//tc.expResult = res
 				require.NoError(t, err)
 				require.Equal(t, tc.expResult, res)
 			}
@@ -218,7 +218,6 @@ func TestRepository_DeleteRelation(t *testing.T) {
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
-				//tc.expResult = res
 				require.NoError(t, err)
 				require.Equal(t, tc.expResult, nil)
 			}
@@ -284,7 +283,6 @@ func TestRepository_IsRelationExist(t *testing.T) {
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
-				//tc.expResult = res
 				require.NoError(t, err)
 				require.Equal(t, tc.expResult, result)
 			}

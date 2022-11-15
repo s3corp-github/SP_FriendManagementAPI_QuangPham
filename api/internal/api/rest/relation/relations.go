@@ -15,7 +15,7 @@ import (
 
 // RelationsHandler create relation handler contain relation service
 type RelationsHandler struct {
-	relationsService relation.RelationServ
+	relationsService relation.RelationsServ
 }
 
 // NewRelationsHandler create relation handler contain RelationsHandler
@@ -54,23 +54,24 @@ func (relations RelationsHandler) CreateFriendsRelation(w http.ResponseWriter, r
 	relationReq := RelationsFriendRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
 		log.Println("CreateFriendsRelation: error when decode request ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateRelationInput(relationReq)
 	if err != nil {
 		log.Println("CreateFriendsRelation: error validate input ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	result, err := relations.relationsService.CreateFriendRelation(r.Context(), input)
 	if err != nil {
 		log.Println("CreateRelation error", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
+
 	utils.ResponseJson(w, http.StatusCreated, result)
 	log.Println("----End API CreateFriendsRelation----")
 }
@@ -78,26 +79,28 @@ func (relations RelationsHandler) CreateFriendsRelation(w http.ResponseWriter, r
 // GetAllFriendOfUser end point to get list friend of user
 func (relations RelationsHandler) GetAllFriendOfUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("----Start API GetAllFriendOfUser----")
+
 	getRelationReq := GetRelationRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&getRelationReq); err != nil {
 		log.Println("GetAllFriendOfUser: error when decode request ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateGetRelationInput(getRelationReq)
 	if err != nil {
 		log.Println("GetAllFriendOfUser: error validate input ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	result, err := relations.relationsService.GetAllFriendsOfUser(r.Context(), input)
 	if err != nil {
 		log.Println("GetAllFriendOfUser error", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
+
 	utils.ResponseJson(w, http.StatusOK, result)
 	log.Println("----End API GetAllFriendOfUser----")
 }
@@ -105,25 +108,27 @@ func (relations RelationsHandler) GetAllFriendOfUser(w http.ResponseWriter, r *h
 // GetCommonFriend end point to get list common friend
 func (relations RelationsHandler) GetCommonFriend(w http.ResponseWriter, r *http.Request) {
 	log.Println("----Start API GetCommonFriend----")
+
 	getRelationReq := RelationsFriendRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&getRelationReq); err != nil {
 		log.Println("GetCommonFriend: error when decode request ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateRelationCommonInput(getRelationReq)
 	if err != nil {
 		log.Println("GetCommonFriend: error validate input ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	result, err := relations.relationsService.GetCommonFriendList(r.Context(), input)
 	if err != nil {
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
+
 	utils.ResponseJson(w, http.StatusOK, result)
 	log.Println("----End API GetCommonFriend----")
 }
@@ -131,26 +136,28 @@ func (relations RelationsHandler) GetCommonFriend(w http.ResponseWriter, r *http
 // CreateSubscriptionRelation end point to create friend relation
 func (relations RelationsHandler) CreateSubscriptionRelation(w http.ResponseWriter, r *http.Request) {
 	log.Println("----Start API CreateSubscriptionRelation----")
+
 	relationReq := RelationsSubAndBlockRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
 		log.Println("CreateSubscriptionRelation: error when decode request ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateSubAndBlockRelationInput(relationReq)
 	if err != nil {
 		log.Println("CreateSubscriptionRelation: error validate input ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	result, err := relations.relationsService.CreateSubscriptionRelation(r.Context(), input)
 	if err != nil {
 		log.Println("CreateRelation error", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
+
 	utils.ResponseJson(w, http.StatusCreated, result)
 	log.Println("----End API CreateSubscriptionRelation----")
 }
@@ -158,26 +165,28 @@ func (relations RelationsHandler) CreateSubscriptionRelation(w http.ResponseWrit
 // CreateBlockRelation end point to create friend relation
 func (relations RelationsHandler) CreateBlockRelation(w http.ResponseWriter, r *http.Request) {
 	log.Println("----Start API CreateBlockRelation----")
+
 	relationReq := RelationsSubAndBlockRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
 		log.Println("CreateBlockRelation: error when decode request ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateSubAndBlockRelationInput(relationReq)
 	if err != nil {
 		log.Println("CreateBlockRelation: error validate input ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	result, err := relations.relationsService.CreateBlockRelation(r.Context(), input)
 	if err != nil {
 		log.Println("CreateRelation error", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
+
 	utils.ResponseJson(w, http.StatusCreated, result)
 	log.Println("----End API CreateBlockRelation----")
 }
@@ -185,26 +194,28 @@ func (relations RelationsHandler) CreateBlockRelation(w http.ResponseWriter, r *
 // GetEmailReceive end point to create friend relation
 func (relations RelationsHandler) GetEmailReceive(w http.ResponseWriter, r *http.Request) {
 	log.Println("----Start API GetEmailReceive----")
+
 	relationReq := EmailReceiveRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
 		log.Println("GetEmailReceive: error when decode request ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateEmailReceiveInput(relationReq)
 	if err != nil {
 		log.Println("GetEmailReceive: error validate input ", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
 
 	result, err := relations.relationsService.GetEmailReceive(r.Context(), input)
 	if err != nil {
 		log.Println("CreateRelation error", err)
-		rest.JsonResponseError(w, err)
+		utils.JsonResponseError(w, err)
 		return
 	}
+
 	utils.ResponseJson(w, http.StatusOK, result)
 	log.Println("----End API GetEmailReceive----")
 }
@@ -215,6 +226,7 @@ func validateRelationInput(relationReq RelationsFriendRequest) (relation.CreateR
 	if len(relationReq.Friends) < 2 {
 		return relation.CreateRelationsInput{}, rest.ErrDataIsEmpty
 	}
+
 	requesterEmail := strings.TrimSpace(relationReq.Friends[0])
 	if requesterEmail == "" {
 		return relation.CreateRelationsInput{}, rest.ErrEmailCannotBeBlank

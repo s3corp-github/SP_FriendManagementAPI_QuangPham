@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 
+	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
+
 	"github.com/friendsofgo/errors"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/pkg/utils"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository"
-	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/orm/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/relation"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/repository/user"
 )
@@ -21,7 +23,6 @@ var (
 type RelationsService struct {
 	relationsRepository repository.RelationsRepo
 	userRepository      repository.UserRepo
-	utils               utils.UtilsInf
 }
 
 // CreateRelationsInput param using for create friend relation
@@ -66,8 +67,8 @@ type EmailReceiveResponse struct {
 	Recipients []string `json:"recipients"`
 }
 
-// RelationServ define function of relation
-type RelationServ interface {
+// RelationsServ define function of relation
+type RelationsServ interface {
 	CreateFriendRelation(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error)
 	CreateSubscriptionRelation(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error)
 	CreateBlockRelation(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error)
@@ -77,7 +78,7 @@ type RelationServ interface {
 }
 
 // NewRelationService create new relation service
-func NewRelationService(db *sql.DB) RelationServ {
+func NewRelationService(db *sql.DB) RelationsServ {
 	return RelationsService{
 		relationsRepository: relation.NewRelationsRepository(db),
 		userRepository:      user.NewUserRepository(db),
@@ -114,22 +115,22 @@ func (serv RelationsService) CreateFriendRelation(ctx context.Context, input Cre
 	//get requesterId from email request
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageRequesterEmailFromRequest)
+		return CreateRelationsResponse{Success: false}, errors.New(controller.ErrMessageRequesterEmailFromRequest)
 	}
 
 	// requester email not exist
 	if requester.Email == "" {
-		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageRequesterEmailNotExist)
+		return CreateRelationsResponse{Success: false}, errors.New(controller.ErrMessageRequesterEmailNotExist)
 	}
 
 	//get addresseeId from email request
 	addressee, err := serv.userRepository.GetUserByEmail(ctx, input.AddresseeEmail)
 	if err != nil {
-		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailFromRequest)
+		return CreateRelationsResponse{Success: false}, errors.New(controller.ErrMessageAddresseeEmailFromRequest)
 	}
 	// requester email not exist
 	if addressee.Email == "" {
-		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailNotExist)
+		return CreateRelationsResponse{Success: false}, errors.New(controller.ErrMessageAddresseeEmailNotExist)
 	}
 
 	isValid, err := isValidToCreateRelationFunc(ctx, serv.relationsRepository, requester.ID, addressee.ID, utils.FriendRelation)
@@ -166,24 +167,27 @@ func (serv RelationsService) GetCommonFriendList(ctx context.Context, input Comm
 	if err != nil {
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
+
 	//get requesterId from email request
 	secondUser, err := serv.userRepository.GetUserByEmail(ctx, input.SecondEmail)
 	if err != nil {
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
+
 	//get second friend list
 	secondIdsList, err := serv.relationsRepository.GetRelationIDsOfUser(ctx, secondUser.ID, utils.FriendRelation)
 	if err != nil {
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
+
 	//Intersection two list friend
-	listCommonIds := utils.Utils{}.Intersection(firstIdsList, secondIdsList)
+	listCommonIds := utils.Intersection(firstIdsList, secondIdsList)
 
 	listCommonFriend, err = serv.userRepository.GetListEmailByIDs(ctx, listCommonIds)
-
 	if err != nil {
 		return FriendListResponse{Success: false, Count: 0}, err
 	}
+
 	return FriendListResponse{
 		Success: true,
 		Friends: listCommonFriend,
@@ -205,7 +209,6 @@ func isRelationExist(ctx context.Context, repo repository.RelationsRepo, request
 // isRelationExist function check valid to create relation
 func isValidToCreateRelation(ctx context.Context, repo repository.RelationsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
 	isExistRelation, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, relationType)
-
 	if err != nil {
 		return false, err
 	}
@@ -220,7 +223,6 @@ func isValidToCreateRelation(ctx context.Context, repo repository.RelationsRepo,
 	case utils.FriendRelation:
 		isRequesterIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, utils.Block)
 		isAddresseeIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, utils.Block)
-
 		if err != nil {
 			return false, err
 		}
@@ -239,7 +241,7 @@ func isValidToCreateRelation(ctx context.Context, repo repository.RelationsRepo,
 	}
 
 	if isValid == false {
-		return false, errors.New(utils.ErrMessageUnableCreateRelation)
+		return false, errors.New(controller.ErrMessageUnableCreateRelation)
 	}
 	return isValid, nil
 }
@@ -253,7 +255,7 @@ func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, inp
 	}
 
 	if requester.Email == "" {
-		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageRequesterEmailNotExist)
+		return CreateRelationsResponse{Success: false}, errors.New(controller.ErrMessageRequesterEmailNotExist)
 	}
 
 	//get addresseeId from email request
@@ -263,7 +265,7 @@ func (serv RelationsService) CreateSubscriptionRelation(ctx context.Context, inp
 	}
 
 	if target.Email == "" {
-		return CreateRelationsResponse{Success: false}, errors.New(utils.ErrMessageAddresseeEmailNotExist)
+		return CreateRelationsResponse{Success: false}, errors.New(controller.ErrMessageAddresseeEmailNotExist)
 	}
 
 	//check if user blocked or user is friend return false
@@ -320,7 +322,7 @@ func (serv RelationsService) CreateBlockRelation(ctx context.Context, input Crea
 		return CreateRelationsResponse{Success: false}, err
 	}
 
-	// if insert block is success then delete subcribe relation
+	// if insert block is success then delete subscribe relation
 	err = serv.relationsRepository.DeleteRelation(ctx, requester.ID, target.ID, utils.Subscribe)
 
 	return CreateRelationsResponse{Success: result}, err
@@ -332,7 +334,7 @@ func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailRec
 	requester, err := serv.userRepository.GetUserByEmail(ctx, input.Sender)
 
 	if err != nil {
-		return EmailReceiveResponse{Success: false}, errors.New(utils.ErrMessageEmailNotExist)
+		return EmailReceiveResponse{Success: false}, errors.New(controller.ErrMessageEmailNotExist)
 	}
 
 	//get lst id friend
@@ -349,7 +351,7 @@ func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailRec
 	}
 
 	// get user who mentioned in text
-	mentionedEmails := utils.Utils{}.FindEmailFromText(input.Text)
+	mentionedEmails := utils.FindEmailFromText(input.Text)
 	userIDsMentionedEmails, err := serv.userRepository.GetUserIDsByEmail(ctx, mentionedEmails)
 
 	// get requester id of block relation
@@ -361,7 +363,7 @@ func (serv RelationsService) GetEmailReceive(ctx context.Context, input EmailRec
 
 	// user can receiver update
 	receiversIDnoMentioned := append(friendIDs, subscribeIDs...)
-	receiversID := utils.Utils{}.GetReceiverID(utils.Utils{}.UniqueSlice(append(receiversIDnoMentioned, userIDsMentionedEmails...)), append(blocksID, requester.ID))
+	receiversID := utils.GetReceiverID(utils.UniqueSlice(append(receiversIDnoMentioned, userIDsMentionedEmails...)), append(blocksID, requester.ID))
 
 	emails, err := serv.userRepository.GetListEmailByIDs(ctx, receiversID)
 

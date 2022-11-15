@@ -1,15 +1,16 @@
 package user
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/api/rest"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/user"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/api/internal/controller/user/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func TestHandler_CreateUser(t *testing.T) {
@@ -34,11 +35,11 @@ func TestHandler_CreateUser(t *testing.T) {
 	}
 
 	tcsMockUserServ := map[string]struct {
-		result user.UserResponse
+		result user.UsersResponse
 		err    error
 	}{
 		"success": {
-			result: user.UserResponse{
+			result: user.UsersResponse{
 				ID:       15,
 				Email:    "nhutquang23@gmail.com",
 				Phone:    "031544284",
@@ -53,7 +54,7 @@ func TestHandler_CreateUser(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/users", strings.NewReader(tc.input))
 			res := httptest.NewRecorder()
 
-			// mock data UserService
+			// mock data UsersService
 			mockUserSv := new(mocks.UserServ)
 			userHandler := UsersHandler{mockUserSv}
 			mockUserSv.On("CreateUser", mock.Anything, mock.AnythingOfType("user.CreateUserInput")).Return(
@@ -90,11 +91,11 @@ func TestHandler_GetListUser(t *testing.T) {
 	}
 
 	tcsMockUserServ := map[string]struct {
-		result user.UserEmailResponse
+		result user.UsersEmailResponse
 		err    error
 	}{
 		"success": {
-			result: user.UserEmailResponse{
+			result: user.UsersEmailResponse{
 				Email: []string{
 					"andy@example.com",
 					"john@example.com",
@@ -110,7 +111,7 @@ func TestHandler_GetListUser(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/users", nil)
 			res := httptest.NewRecorder()
 
-			// mock data UserService
+			// mock data UsersService
 			mockUserSv := new(mocks.UserServ)
 			userHandler := UsersHandler{mockUserSv}
 			mockUserSv.On("GetListUser", mock.Anything).Return(
