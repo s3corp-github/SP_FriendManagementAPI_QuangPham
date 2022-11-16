@@ -1,20 +1,50 @@
-version: "3.9"
+version: "3.8"
+
 services:
-  postgres:
-    image: postgres:12-alpine
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=friends_management
-  api:
+  app:
+    container_name: friends-management-app-dev
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
-      - DB_SOURCE=postgresql://root:secret@postgres:5432/friends_management?sslmode=disable
+      DB_SOURCE: "postgres://friends-management:@db:5432/friends-management?sslmode=disable"
+    networks:
+      - network
+    restart: "always"
     depends_on:
-      - postgres
-    entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
-    command: ["/app/main"]
+      - db
+
+  db:
+    container_name: friends-management-db-dev
+    image: postgres:11-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - network
+    environment:
+      POSTGRES_USER: friends-management
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: friends-management
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  db-migrate:
+    container_name: friends-management-db-migrate-dev
+    image: migrate/migrate:v4.15.1
+    restart: "no"
+    entrypoint: ""
+    networks:
+      - network
+    depends_on:
+      - db
+
+# networks to be created to facilitate communication between containers
+networks:
+  network:
+    driver: bridge
+
+volumes:
+  db:
