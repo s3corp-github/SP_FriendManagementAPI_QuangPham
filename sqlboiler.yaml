@@ -1,6 +1,6 @@
 schema: 'public'
 pkg-name: 'models'
-output: 'models'
+output: 'internal/models'
 wipe: true
 no-tests: true
 no-hooks: true

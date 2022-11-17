@@ -7,9 +7,8 @@ import (
 )
 
 var (
-	ErrNameInvalid                     = utils.RespError{Code: http.StatusBadRequest, Message: "Name cannot be empty"}
-	ErrEmailCannotBeBlank              = utils.RespError{Code: http.StatusBadRequest, Message: "Email cannot be empty"}
-	ErrInvalidEmail                    = utils.RespError{Code: http.StatusBadRequest, Message: "Invalid email address"}
-	ErrDataIsEmpty                     = utils.RespError{Code: http.StatusBadRequest, Message: "List of friend request is empty"}
-	ErrRequesterEmailAndAddresseeEmail = utils.RespError{Code: http.StatusBadRequest, Message: "Requester email and target email must not be the same"}
+	ErrInvalidName             = utils.RespError{Code: http.StatusBadRequest, Message: "Name cannot be empty"}
+	ErrInvalidEmail            = utils.RespError{Code: http.StatusBadRequest, Message: "Invalid email address"}
+	ErrInvalidBodyRequest      = utils.RespError{Code: http.StatusBadRequest, Message: "Invalid body request"}
+	ErrRequesterAndTargetEmail = utils.RespError{Code: http.StatusBadRequest, Message: "Requester email and target email must not be the same"}
 )

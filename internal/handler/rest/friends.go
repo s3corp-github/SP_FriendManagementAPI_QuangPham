@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/mail"
 	"strings"
@@ -16,14 +15,14 @@ type FriendsRequest struct {
 	Friends []string `json:"friends"`
 }
 
-// RelationFriendsRequest request to create friend or get common friend list
-type RelationFriendsRequest struct {
+// CreateFriendsRequest request to create friend or get common friend list
+type CreateFriendsRequest struct {
 	Requester string `json:"requester"`
 	Target    string `json:"target"`
 }
 
-// GetRelationRequest request to get list friend of users
-type GetRelationRequest struct {
+// GetFriendsRequest request to get list friend of users
+type GetFriendsRequest struct {
 	Email string `json:"email"`
 }
 
@@ -33,94 +32,68 @@ type EmailReceiveRequest struct {
 	Text   string `json:"text"`
 }
 
-// CreateRelationsResponse response for API create a friend
-type CreateRelationsResponse struct {
+// CreateUserFriendsResponse response for API create a friend
+type CreateUserFriendsResponse struct {
 	Success bool `json:"success"`
 }
 
 // CreateFriends end point to create friend
 func (h Handler) CreateFriends(w http.ResponseWriter, r *http.Request) {
-	log.Println("----Start API CreateFriends----")
-
-	friendsResp := CreateRelationsResponse{}
 	friendsReq := FriendsRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&friendsReq); err != nil {
-		log.Println("CreateFriends: error when decode request ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateRelationInput(friendsReq)
 	if err != nil {
-		log.Println("CreateFriends: error validate input ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	result, err := h.friendService.CreateFriend(r.Context(), input)
-	if err != nil {
-		log.Println("CreateRelation error", err)
+	if err = h.friendService.CreateFriend(r.Context(), input); err != nil {
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	if result {
-		friendsResp = CreateRelationsResponse{
-			Success: true,
-		}
-	} else {
-		friendsResp = CreateRelationsResponse{
-			Success: false,
-		}
-	}
-
-	utils.ResponseJson(w, http.StatusCreated, friendsResp)
-	log.Println("----End API CreateFriends----")
+	utils.ResponseJson(w, http.StatusCreated, CreateUserFriendsResponse{
+		Success: true,
+	})
 }
 
-// GetAllFriendOfUser end point to get list friend of users
-func (h Handler) GetAllFriendOfUser(w http.ResponseWriter, r *http.Request) {
-	log.Println("----Start API GetAllFriendOfUser----")
-
-	getRelationReq := GetRelationRequest{}
+// GetFriends end point to get list friend of users
+func (h Handler) GetFriends(w http.ResponseWriter, r *http.Request) {
+	getRelationReq := GetFriendsRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&getRelationReq); err != nil {
-		log.Println("GetAllFriendOfUser: error when decode request ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateGetRelationInput(getRelationReq)
 	if err != nil {
-		log.Println("GetAllFriendOfUser: error validate input ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	result, err := h.friendService.GetAllFriends(r.Context(), input)
+	result, err := h.friendService.GetFriends(r.Context(), input)
 	if err != nil {
-		log.Println("GetAllFriendOfUser error", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
 	utils.ResponseJson(w, http.StatusOK, result)
-	log.Println("----End API GetAllFriendOfUser----")
 }
 
-// GetCommonFriend end point to get list common friend
-func (h Handler) GetCommonFriend(w http.ResponseWriter, r *http.Request) {
-	log.Println("----Start API GetCommonFriend----")
-
+// GetCommonFriends end point to get list common friend
+func (h Handler) GetCommonFriends(w http.ResponseWriter, r *http.Request) {
 	getRelationReq := FriendsRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&getRelationReq); err != nil {
-		log.Println("GetCommonFriend: error when decode request ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateRelationCommonInput(getRelationReq)
 	if err != nil {
-		log.Println("GetCommonFriend: error validate input ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
@@ -132,169 +105,130 @@ func (h Handler) GetCommonFriend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.ResponseJson(w, http.StatusOK, result)
-	log.Println("----End API GetCommonFriend----")
 }
 
 // CreateSubscription end point to create friend
 func (h Handler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
-	log.Println("----Start API CreateSubscription----")
-
-	relationReq := RelationFriendsRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
-		log.Println("CreateSubscription: error when decode request ", err)
+	friendsReq := CreateFriendsRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&friendsReq); err != nil {
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	input, err := validateSubAndBlockRelationInput(relationReq)
+	input, err := validateSubAndBlockRelationInput(friendsReq)
 	if err != nil {
-		log.Println("CreateSubscription: error validate input ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	result, err := h.friendService.CreateSubscription(r.Context(), input)
-	if err != nil {
-		log.Println("CreateRelation error", err)
+	if err = h.friendService.CreateSubscription(r.Context(), input); err != nil {
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	utils.ResponseJson(w, http.StatusCreated, result)
-	log.Println("----End API CreateSubscription----")
+	utils.ResponseJson(w, http.StatusCreated, CreateUserFriendsResponse{
+		Success: true,
+	})
 }
 
 // CreateBlock end point to create friend
 func (h Handler) CreateBlock(w http.ResponseWriter, r *http.Request) {
-	log.Println("----Start API CreateBlock----")
-
-	relationReq := RelationFriendsRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
-		log.Println("CreateBlock: error when decode request ", err)
+	blockReq := CreateFriendsRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&blockReq); err != nil {
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	input, err := validateSubAndBlockRelationInput(relationReq)
+	input, err := validateSubAndBlockRelationInput(blockReq)
 	if err != nil {
-		log.Println("CreateBlock: error validate input ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	result, err := h.friendService.CreateBlock(r.Context(), input)
-	if err != nil {
-		log.Println("CreateRelation error", err)
+	if err = h.friendService.CreateBlock(r.Context(), input); err != nil {
 		utils.JsonResponseError(w, err)
 		return
 	}
 
-	utils.ResponseJson(w, http.StatusCreated, result)
-	log.Println("----End API CreateBlock----")
+	utils.ResponseJson(w, http.StatusCreated, CreateUserFriendsResponse{
+		Success: true,
+	})
 }
 
 // GetEmailReceive end point to create friend
 func (h Handler) GetEmailReceive(w http.ResponseWriter, r *http.Request) {
-	log.Println("----Start API GetEmailReceive----")
-
 	relationReq := EmailReceiveRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {
-		log.Println("GetEmailReceive: error when decode request ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
 	input, err := validateEmailReceiveInput(relationReq)
 	if err != nil {
-		log.Println("GetEmailReceive: error validate input ", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
 	result, err := h.friendService.GetEmailReceive(r.Context(), input)
 	if err != nil {
-		log.Println("CreateRelation error", err)
 		utils.JsonResponseError(w, err)
 		return
 	}
 
 	utils.ResponseJson(w, http.StatusOK, result)
-	log.Println("----End API GetEmailReceive----")
 }
 
 // validateRelationInput function validate create friends request
 func validateRelationInput(relationReq FriendsRequest) (friends.CreateRelationsInput, error) {
-	//check of slice of friend is empty
-	if len(relationReq.Friends) < 2 {
-		return friends.CreateRelationsInput{}, ErrDataIsEmpty
+	if len(relationReq.Friends) != 2 {
+		return friends.CreateRelationsInput{}, ErrInvalidBodyRequest
 	}
 
 	requesterEmail := strings.TrimSpace(relationReq.Friends[0])
-	if requesterEmail == "" {
-		return friends.CreateRelationsInput{}, ErrEmailCannotBeBlank
-	}
-
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
 		return friends.CreateRelationsInput{}, ErrInvalidEmail
 	}
 
-	addresseeEmail := strings.TrimSpace(relationReq.Friends[1])
-	if addresseeEmail == "" {
-		return friends.CreateRelationsInput{}, ErrEmailCannotBeBlank
-	}
-
-	if _, err := mail.ParseAddress(addresseeEmail); err != nil {
+	targetEmail := strings.TrimSpace(relationReq.Friends[1])
+	if _, err := mail.ParseAddress(targetEmail); err != nil {
 		return friends.CreateRelationsInput{}, ErrInvalidEmail
 	}
 
-	//check email requester and addressee is the same
-	if requesterEmail == addresseeEmail {
-		return friends.CreateRelationsInput{}, ErrRequesterEmailAndAddresseeEmail
+	if strings.EqualFold(requesterEmail, targetEmail) {
+		return friends.CreateRelationsInput{}, ErrRequesterAndTargetEmail
 	}
 
 	return friends.CreateRelationsInput{
 		RequesterEmail: requesterEmail,
-		AddresseeEmail: addresseeEmail,
+		TargetEmail:    targetEmail,
 	}, nil
 }
 
 // validateSubAndBlockRelationInput function validate create sub and block friends request
-func validateSubAndBlockRelationInput(relationReq RelationFriendsRequest) (friends.CreateRelationsInput, error) {
-
+func validateSubAndBlockRelationInput(relationReq CreateFriendsRequest) (friends.CreateRelationsInput, error) {
 	requesterEmail := strings.TrimSpace(relationReq.Requester)
-	if requesterEmail == "" {
-		return friends.CreateRelationsInput{}, ErrEmailCannotBeBlank
-	}
-
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
 		return friends.CreateRelationsInput{}, ErrInvalidEmail
 	}
 
-	addresseeEmail := strings.TrimSpace(relationReq.Target)
-	if addresseeEmail == "" {
-		return friends.CreateRelationsInput{}, ErrEmailCannotBeBlank
-	}
-
-	if _, err := mail.ParseAddress(addresseeEmail); err != nil {
+	targetEmail := strings.TrimSpace(relationReq.Target)
+	if _, err := mail.ParseAddress(targetEmail); err != nil {
 		return friends.CreateRelationsInput{}, ErrInvalidEmail
 	}
 
-	if requesterEmail == addresseeEmail {
-		return friends.CreateRelationsInput{}, ErrRequesterEmailAndAddresseeEmail
+	if requesterEmail == targetEmail {
+		return friends.CreateRelationsInput{}, ErrRequesterAndTargetEmail
 	}
 
 	return friends.CreateRelationsInput{
 		RequesterEmail: requesterEmail,
-		AddresseeEmail: addresseeEmail,
+		TargetEmail:    targetEmail,
 	}, nil
 }
 
 // validateGetRelationInput function validate get friend request
-func validateGetRelationInput(relationReq GetRelationRequest) (friends.GetAllFriendsInput, error) {
+func validateGetRelationInput(relationReq GetFriendsRequest) (friends.GetAllFriendsInput, error) {
 	requesterEmail := strings.TrimSpace(relationReq.Email)
-	if requesterEmail == "" {
-		return friends.GetAllFriendsInput{}, ErrEmailCannotBeBlank
-	}
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
 		return friends.GetAllFriendsInput{}, ErrInvalidEmail
 	}
@@ -306,40 +240,28 @@ func validateGetRelationInput(relationReq GetRelationRequest) (friends.GetAllFri
 
 // validateRelationCommonInput function validate get common friend request
 func validateRelationCommonInput(relationReq FriendsRequest) (friends.CommonFriendsInput, error) {
-	//check if slice of friend is empty
-	if len(relationReq.Friends) < 2 {
-		return friends.CommonFriendsInput{}, ErrDataIsEmpty
-	}
-	requesterEmail := strings.TrimSpace(relationReq.Friends[0])
-	if requesterEmail == "" {
-		return friends.CommonFriendsInput{}, ErrEmailCannotBeBlank
+	if len(relationReq.Friends) != 2 {
+		return friends.CommonFriendsInput{}, ErrInvalidBodyRequest
 	}
 
+	requesterEmail := strings.TrimSpace(relationReq.Friends[0])
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
 		return friends.CommonFriendsInput{}, ErrInvalidEmail
 	}
 
-	addresseeEmail := strings.TrimSpace(relationReq.Friends[1])
-	if addresseeEmail == "" {
-		return friends.CommonFriendsInput{}, ErrEmailCannotBeBlank
-	}
-
-	if _, err := mail.ParseAddress(addresseeEmail); err != nil {
+	targetEmail := strings.TrimSpace(relationReq.Friends[1])
+	if _, err := mail.ParseAddress(targetEmail); err != nil {
 		return friends.CommonFriendsInput{}, ErrInvalidEmail
 	}
 
 	return friends.CommonFriendsInput{
-		FirstEmail:  requesterEmail,
-		SecondEmail: addresseeEmail,
+		RequesterEmail: requesterEmail,
+		TargetEmail:    targetEmail,
 	}, nil
 }
 
 func validateEmailReceiveInput(relationReq EmailReceiveRequest) (friends.EmailReceiveInput, error) {
 	requesterEmail := strings.TrimSpace(relationReq.Sender)
-	if requesterEmail == "" {
-		return friends.EmailReceiveInput{}, ErrEmailCannotBeBlank
-	}
-
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {
 		return friends.EmailReceiveInput{}, ErrInvalidEmail
 	}

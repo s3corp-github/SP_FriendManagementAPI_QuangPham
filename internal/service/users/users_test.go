@@ -4,31 +4,25 @@ import (
 	"context"
 	"testing"
 
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/mocks"
-	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/orm/models"
-
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/user"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/volatiletech/null/v8"
 )
 
 func TestService_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
 		input     CreateUserInput
-		expResult UsersResponse
+		expResult UserResponse
 		expErr    error
 	}{
 		"success": {
 			input: CreateUserInput{
-				Email:    "nhutquang23@gmail.com",
-				Phone:    "123456",
-				IsActive: true,
+				Email: "nhutquang23@gmail.com",
 			},
-			expResult: UsersResponse{
-				ID:       15,
-				Email:    "nhutquang23@gmail.com",
-				Phone:    "123456",
-				IsActive: true,
+			expResult: UserResponse{
+				ID:    15,
+				Email: "nhutquang23@gmail.com",
 			},
 		},
 	}
@@ -39,10 +33,8 @@ func TestService_CreateUser(t *testing.T) {
 	}{
 		"success": {
 			result: models.User{
-				ID:       15,
-				Email:    "nhutquang23@gmail.com",
-				Phone:    null.StringFrom("123456"),
-				IsActive: null.BoolFrom(true),
+				ID:    15,
+				Email: "nhutquang23@gmail.com",
 			},
 		},
 	}
@@ -50,11 +42,11 @@ func TestService_CreateUser(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockRepo := new(mocks.UserRepo)
+			mockRepo := new(user.UsersRepoMock)
 			mockRepo.On("CreateUser", mock.Anything, mock.Anything).
 				Return(tcMockUserRepo[desc].result, tcMockUserRepo[desc].err)
 
-			userService := UsersService{mockRepo}
+			userService := UserService{mockRepo}
 			res, err := userService.CreateUser(ctx, tc.input)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -69,24 +61,19 @@ func TestService_CreateUser(t *testing.T) {
 
 func TestService_GetAllUser(t *testing.T) {
 	tcs := map[string]struct {
-		expResult     UsersEmailResponse
+		expResult     []UserEmailResponse
 		expResultRepo []string
 		expErr        error
 	}{
 		"success": {
-			expResult: UsersEmailResponse{
-				Email: []string{
-					"andy@example.com",
-					"john@example.com",
-					"common@example.com",
-					"lisa@example.com",
+			expResult: []UserEmailResponse{
+				{
+					Email: "andy@example.com",
+					Name:  "andy",
 				},
 			},
 			expResultRepo: []string{
 				"andy@example.com",
-				"john@example.com",
-				"common@example.com",
-				"lisa@example.com",
 			},
 		},
 	}
@@ -94,12 +81,12 @@ func TestService_GetAllUser(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockRepo := new(mocks.UserRepo)
-			mockRepo.On("GetAllUser", mock.Anything, mock.Anything).
+			mockRepo := new(user.UsersRepoMock)
+			mockRepo.On("GetUsers", mock.Anything, mock.Anything).
 				Return(tc.expResultRepo, tc.expErr)
 
-			userService := UsersService{mockRepo}
-			res, err := userService.GetListUser(ctx)
+			userService := UserService{mockRepo}
+			res, err := userService.GetUsers(ctx)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {

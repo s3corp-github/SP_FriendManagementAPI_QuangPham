@@ -1,10 +1,12 @@
 package friends
 
-const (
-	ErrMessageRequesterEmailFromRequest = "Error get requester email from request"
-	ErrMessageAddresseeEmailFromRequest = "Error get addressee email from request"
-	ErrMessageRequesterEmailNotExist    = "Requester email not exist"
-	ErrMessageAddresseeEmailNotExist    = "Addressee email not exist"
-	ErrMessageEmailNotExist             = "Email not exist"
-	ErrMessageUnableCreateRelation      = "Unable to create friends"
+import "errors"
+
+var (
+	ErrRequestEmailInvalid        = errors.New("request email from request is invalid")
+	ErrTargetEmailInvalid         = errors.New("target email from request is invalid")
+	ErrTwoEmailAlreadyFriend      = errors.New("two emails are friend")
+	ErrTwoEmailInvalidCreateSub   = errors.New("two emails are invalid create subscription")
+	ErrTwoEmailInvalidCreateBlock = errors.New("two emails are invalid create block")
+	ErrRelationIsExists           = errors.New("relation is exists")
 )

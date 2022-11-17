@@ -8,12 +8,12 @@ import (
 )
 
 // ConnectDB returns a database connection
-func ConnectDB(driver string, dbURL string) (*sql.DB, error) {
+func ConnectDB(dbURL string) (*sql.DB, error) {
 	if dbURL == "" {
 		return nil, errors.New("Invalid dbURL")
 	}
 
-	conn, err := sql.Open(driver, dbURL)
+	conn, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return nil, err
 	}

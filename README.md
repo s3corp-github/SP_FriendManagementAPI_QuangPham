@@ -1,49 +1,52 @@
 # **Project: friend-management**
-### **Description**:
-Using Go, go-chi, migration, sqlboiler, mockery, viper
+ToDo
 
-### Database: 
-postgesql
+### Quick Run Project:
+- Setup: make setup
+- Run app: make run
 
-### Load Config file:
-viper
+### **Technology**:
+- Using Go 1.19
+- Postgesql 11
+- go-chi 
+- DB migration
+- sqlboiler
+- mockery
+- viper
 
-### Routing: 
-go-chi
+### Project architecture
+- Workflow: Request => Internal/API/Rest => Internal/Controller => Internal/Repository => Database
 
-### Models: 
--Users
-
--Relations
+- Three layers model:
+  + Internal/API/Rest: Get request from httpRequest, decode, validate, call controllers, write httpResponse
+  + Internal/Controller: Handle business logic, call repositories
+  + Internal/Repository: Data access layer
 
 ### API ENDPOINTS(localhost:8080)
     1. Get List User:
         Path: http:/localhost:8080/users
         Method: GET
         Success: 200
+          [
             {
-              "Email": [
-                  "andy@example.com",
-                  "john@example.com",
-                  "common@example.com",
-                  "lisa@example.com"
-              ]
+            "Name": "andy",
+            "Email": "andy@example.com"
             }
+          ]
+
     2. Create User:
         Path: http:/localhost:8080/users
         Method: Post
         Payload:
             {
                 "email":"test@example.com",
-                "phone":"0123456789",
-                "is_active": true
+                "name":"test"
             }
         Success: 201
             {
                 "ID": 1,
-                "Email": "test@example.com",
-                "Phone": "0123456789",
-                "IsActive": true
+                "Email": "test@example.com"
+                
             }
     3. Create friend connection between 2 email
         Path: http:/localhost:8080/relations/friend
@@ -132,25 +135,3 @@ go-chi
                     "lisa@example.com"
                 ]
             }
-    
-
-### Quick Run Project:
-
-    1.Run command line: git clone https://github.com/s3corp-github/SP_FriendManagementAPI_QuangPham.git
-    
-    2.Run command line: docker compose up
-
-    3.Using postman to get list user 
-
-### Project architecture
-- Workflow: Request => Internal/API/Rest => Internal/Controller => Internal/Repository => Database
-
-- Three layers model:
-    + Internal/API/Rest: Get request from httpRequest, decode, validate, call controllers, write httpResponse
-    + Internal/Controller: Handle business logic, call repositories
-    + Internal/Repository: Data access layer 
-
-    
-
-    
-

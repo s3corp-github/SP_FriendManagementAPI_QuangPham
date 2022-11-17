@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 )
 
 type UsersRepo interface {
@@ -15,9 +15,11 @@ type UsersRepo interface {
 
 	GetUserIDsByEmail(ctx context.Context, email []string) ([]int, error)
 
-	GetListEmailByIDs(ctx context.Context, ids []int) ([]string, error)
+	GetEmailsByIDs(ctx context.Context, ids []int) ([]string, error)
 
-	GetAllUser(ctx context.Context) ([]string, error)
+	GetUsers(ctx context.Context) (models.UserSlice, error)
+
+	CheckEmailIsExist(ctx context.Context, email string) (bool, error)
 }
 
 type FriendsRepo interface {
@@ -25,9 +27,9 @@ type FriendsRepo interface {
 
 	IsRelationExist(ctx context.Context, requesterId int, targetId int, relationType int) (bool, error)
 
-	GetRelationIDsOfUser(ctx context.Context, requesterId int, relationType int) ([]int, error)
+	GetRelationIDs(ctx context.Context, requesterId int, relationType int) ([]int, error)
 
-	GetRequesterIDRelation(ctx context.Context, requesterId int, relationType int) ([]int, error)
+	GetRequesterIDFriends(ctx context.Context, requesterId int, relationType int) ([]int, error)
 
 	DeleteRelation(ctx context.Context, requesterId int, addresseeId int, relationType int) error
 }

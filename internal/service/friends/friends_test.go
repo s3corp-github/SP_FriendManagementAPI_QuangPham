@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/mocks"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/orm/models"
-
 	"github.com/friendsofgo/errors"
+	models2 "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/friend"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/user"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
@@ -25,7 +25,7 @@ func TestService_IsRelationExist(t *testing.T) {
 	tcs := map[string]struct {
 		mockIsRelation mockIsRelation
 		requesterID    int
-		addresseeID    int
+		TargetID       int
 		relationType   int
 		isExistMock    bool
 		expResult      bool
@@ -33,13 +33,13 @@ func TestService_IsRelationExist(t *testing.T) {
 	}{
 		"success": {
 			requesterID:  1,
-			addresseeID:  3,
+			TargetID:     3,
 			relationType: 1,
 			isExistMock:  true,
 			expResult:    true,
 		},
 		"case requesterID is 0": {
-			addresseeID:  3,
+			TargetID:     3,
 			relationType: 1,
 			isExistMock:  true,
 			expErr:       errors.New("requesterId cannot be null"),
@@ -49,11 +49,11 @@ func TestService_IsRelationExist(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockRelationRepo := new(mocks.RelationsRepo)
-			mockRelationRepo.On("IsRelationExist", mock.Anything, tc.requesterID, tc.addresseeID, tc.relationType).
+			mockRelationRepo := new(friend.FriendsRepoMock)
+			mockRelationRepo.On("IsRelationExist", mock.Anything, tc.requesterID, tc.TargetID, tc.relationType).
 				Return(tc.isExistMock, tc.expErr)
 
-			res, err := isRelationExist(ctx, mockRelationRepo, tc.requesterID, tc.addresseeID, tc.relationType)
+			res, err := isRelationExist(ctx, mockRelationRepo, tc.requesterID, tc.TargetID, tc.relationType)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
@@ -69,139 +69,122 @@ func TestService_IsRelationExist(t *testing.T) {
 func TestService_CreateFriendRelation(t *testing.T) {
 	tcs := map[string]struct {
 		input                   CreateRelationsInput
-		userRepoExpResultMock1  dbmodels.dbmodels
-		userRepoExpResultMock2  dbmodels.User
-		createRelationInputMock dbmodels.Relation
+		userRepoExpResultMock1  models2.User
+		userRepoExpResultMock2  models2.User
+		createRelationInputMock models2.UserFriend
 		repoExpResultMock       bool
 		isExistMock             bool
-		expResult               CreateRelationsResponse
+		expResult               bool
 		expErr                  error
 	}{
 		"success": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock: true,
 			isExistMock:       false,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				AddresseeID:    4,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.FriendRelation,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
-			expResult: CreateRelationsResponse{
-				Success: true,
-			},
+			expResult: true,
 		},
 		"case requester users not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock:      false,
 			isExistMock:            false,
-			userRepoExpResultMock1: dbmodels.User{},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{},
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    0,
-				AddresseeID:    4,
-				RequesterEmail: "",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.FriendRelation,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  0,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Error get requester email from request"),
+			expResult: false,
+			expErr:    errors.New("Error get requester email from request"),
 		},
 		"case addressee users not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "",
+				TargetEmail:    "",
 			},
 			repoExpResultMock: false,
 			isExistMock:       false,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "",
-				RelationType:   utils.FriendRelation,
+			userRepoExpResultMock2: models2.User{},
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Error get requester email from request"),
+			expResult: false,
+			expErr:    errors.New("Error get requester email from request"),
 		},
 		"case error create friends because friend friends is existed ": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock: false,
 			isExistMock:       true,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				AddresseeID:    4,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.FriendRelation,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Error get requester email from request"),
+			expResult: false,
+			expErr:    errors.New("Error get requester email from request"),
 		},
 	}
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks.UserRepo)
+			mockUserRepo := new(user.UsersRepoMock)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
+			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.TargetEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks.RelationsRepo)
-			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mockFriendsRepo := new(friend.FriendsRepoMock)
+			mockFriendsRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
-			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
+			mockFriendsRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
 				Return(tc.repoExpResultMock, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
-			res, err := relationService.CreateFriendRelation(ctx, tc.input)
+			friendsService := FriendService{userRepo: mockUserRepo, friendRepo: mockFriendsRepo}
+			err := friendsService.CreateFriend(ctx, tc.input)
+			var res bool
+			if err == nil {
+				res = true
+			}
+
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
@@ -217,7 +200,7 @@ func TestService_CreateFriendRelation(t *testing.T) {
 func TestService_GetAllFriendsOfUser(t *testing.T) {
 	tcs := map[string]struct {
 		input                GetAllFriendsInput
-		expUserByEmailMock   dbmodels.User
+		expUserByEmailMock   models2.User
 		expRelationIDsOfUser []int
 		expListEmailByIDs    []string
 		expResult            FriendListResponse
@@ -227,7 +210,7 @@ func TestService_GetAllFriendsOfUser(t *testing.T) {
 			input: GetAllFriendsInput{
 				Email: "common@example.com",
 			},
-			expUserByEmailMock: dbmodels.User{
+			expUserByEmailMock: models2.User{
 				ID:    3,
 				Email: "common@example.com",
 			},
@@ -243,7 +226,7 @@ func TestService_GetAllFriendsOfUser(t *testing.T) {
 			input: GetAllFriendsInput{
 				Email: "",
 			},
-			expUserByEmailMock:   dbmodels.User{},
+			expUserByEmailMock:   models2.User{},
 			expRelationIDsOfUser: []int{},
 			expListEmailByIDs:    []string{},
 			expResult: FriendListResponse{
@@ -258,17 +241,18 @@ func TestService_GetAllFriendsOfUser(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks.UserRepo)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.Email).
+			mockUsersRepo := new(user.UsersRepoMock)
+			mockUsersRepo.On("GetUserByEmail", mock.Anything, tc.input.Email).
 				Return(tc.expUserByEmailMock, tc.expErr)
-			mockRelationRepo := new(mocks.RelationsRepo)
-			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock.ID, 1).
+
+			mockFriendsRepo := new(friend.FriendsRepoMock)
+			mockFriendsRepo.On("GetRelationIDs", mock.Anything, tc.expUserByEmailMock.ID, 1).
 				Return(tc.expRelationIDsOfUser, tc.expErr)
-			mockUserRepo.On("GetListEmailByIDs", mock.Anything, mock.Anything).
+			mockUsersRepo.On("GetEmailsByIDs", mock.Anything, mock.Anything).
 				Return(tc.expListEmailByIDs, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
-			res, err := relationService.GetAllFriendsOfUser(ctx, tc.input)
+			relationService := FriendService{friendRepo: mockFriendsRepo, userRepo: mockUsersRepo}
+			res, err := relationService.GetFriends(ctx, tc.input)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
@@ -282,8 +266,8 @@ func TestService_GetAllFriendsOfUser(t *testing.T) {
 func TestService_GetCommonFriendList(t *testing.T) {
 	tcs := map[string]struct {
 		input               CommonFriendsInput
-		expUserByEmailMock1 dbmodels.User
-		expUserByEmailMock2 dbmodels.User
+		expUserByEmailMock1 models2.User
+		expUserByEmailMock2 models2.User
 		expIdsFirstEmail    []int
 		expIdsSecondEmail   []int
 		expIntersectionIDs  []int
@@ -293,14 +277,14 @@ func TestService_GetCommonFriendList(t *testing.T) {
 	}{
 		"success": {
 			input: CommonFriendsInput{
-				FirstEmail:  "john@example.com",
-				SecondEmail: "andy@example.com",
+				RequesterEmail: "john@example.com",
+				TargetEmail:    "andy@example.com",
 			},
-			expUserByEmailMock1: dbmodels.User{
+			expUserByEmailMock1: models2.User{
 				ID:    1,
 				Email: "john@example.com",
 			},
-			expUserByEmailMock2: dbmodels.User{
+			expUserByEmailMock2: models2.User{
 				ID:    2,
 				Email: "andy@example.com",
 			},
@@ -316,10 +300,10 @@ func TestService_GetCommonFriendList(t *testing.T) {
 		},
 		"case first email is empty": {
 			input: CommonFriendsInput{
-				SecondEmail: "andy@example.com",
+				TargetEmail: "andy@example.com",
 			},
-			expUserByEmailMock1: dbmodels.User{},
-			expUserByEmailMock2: dbmodels.User{
+			expUserByEmailMock1: models2.User{},
+			expUserByEmailMock2: models2.User{
 				ID:    2,
 				Email: "andy@example.com",
 			},
@@ -336,13 +320,13 @@ func TestService_GetCommonFriendList(t *testing.T) {
 		},
 		"case second email is empty": {
 			input: CommonFriendsInput{
-				FirstEmail: "john@example.com",
+				RequesterEmail: "john@example.com",
 			},
-			expUserByEmailMock1: dbmodels.User{
+			expUserByEmailMock1: models2.User{
 				ID:    1,
 				Email: "john@example.com",
 			},
-			expUserByEmailMock2: dbmodels.User{},
+			expUserByEmailMock2: models2.User{},
 			expIdsFirstEmail:    []int{},
 			expIdsSecondEmail:   []int{},
 			expIntersectionIDs:  []int{},
@@ -359,27 +343,27 @@ func TestService_GetCommonFriendList(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks.UserRepo)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.FirstEmail).
+			mockUsersRepo := new(user.UsersRepoMock)
+			mockUsersRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.expUserByEmailMock1, tc.expErr)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.SecondEmail).
+			mockUsersRepo.On("GetUserByEmail", mock.Anything, tc.input.TargetEmail).
 				Return(tc.expUserByEmailMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks.RelationsRepo)
-			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock1.ID, 1).
+			mockFriendRepo := new(friend.FriendsRepoMock)
+			mockFriendRepo.On("GetRelationIDs", mock.Anything, tc.expUserByEmailMock1.ID, 1).
 				Return(tc.expIdsFirstEmail, tc.expErr)
-			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock2.ID, 1).
+			mockFriendRepo.On("GetRelationIDs", mock.Anything, tc.expUserByEmailMock2.ID, 1).
 				Return(tc.expIdsSecondEmail, tc.expErr)
 
-			mockUtils := new(utilsmock.UtilsInf)
-			mockUtils.On("Intersection", tc.expIdsFirstEmail, tc.expIdsSecondEmail).
-				Return(tc.expIntersectionIDs, tc.expErr)
+			//mockUtils := new(utilsmock.UtilsInf)
+			//mockUtils.On("Intersection", tc.expIdsFirstEmail, tc.expIdsSecondEmail).
+			//	Return(tc.expIntersectionIDs, tc.expErr)
 
-			mockUserRepo.On("GetListEmailByIDs", mock.Anything, mock.Anything).
+			mockUsersRepo.On("GetEmailsByIDs", mock.Anything, mock.Anything).
 				Return(tc.expListEmail, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
-			res, err := relationService.GetCommonFriendList(ctx, tc.input)
+			relationService := FriendService{friendRepo: mockFriendRepo, userRepo: mockUsersRepo}
+			res, err := relationService.GetCommonFriends(ctx, tc.input)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
@@ -393,139 +377,122 @@ func TestService_GetCommonFriendList(t *testing.T) {
 func TestService_CreateSubscriptionRelation(t *testing.T) {
 	tcs := map[string]struct {
 		input                   CreateRelationsInput
-		userRepoExpResultMock1  dbmodels.User
-		userRepoExpResultMock2  dbmodels.User
-		createRelationInputMock dbmodels.Relation
+		userRepoExpResultMock1  models2.User
+		userRepoExpResultMock2  models2.User
+		createRelationInputMock models2.UserFriend
 		repoExpResultMock       bool
 		isExistMock             bool
-		expResult               CreateRelationsResponse
+		expResult               bool
 		expErr                  error
 	}{
 		"success": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock: true,
 			isExistMock:       false,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				AddresseeID:    4,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.Subscribe,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.Subscribe),
 			},
-			expResult: CreateRelationsResponse{
-				Success: true,
-			},
+			expResult: true,
 		},
 		"case requester users not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock:      false,
 			isExistMock:            false,
-			userRepoExpResultMock1: dbmodels.User{},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{},
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    0,
-				AddresseeID:    4,
-				RequesterEmail: "",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.Subscribe,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  0,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.Subscribe),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Email cannot be empty"),
+			expResult: false,
+			expErr:    errors.New("Email cannot be empty"),
 		},
 		"case addressee users not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "",
+				TargetEmail:    "",
 			},
 			repoExpResultMock: false,
 			isExistMock:       false,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "",
-				RelationType:   utils.FriendRelation,
+			userRepoExpResultMock2: models2.User{},
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Email cannot be empty"),
+			expResult: false,
+			expErr:    errors.New("Email cannot be empty"),
 		},
 		"case error create friends because friend friends is existed ": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock: false,
 			isExistMock:       true,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				AddresseeID:    4,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.Subscribe,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.Subscribe),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Email cannot be empty"),
+			expResult: false,
+			expErr:    errors.New("Email cannot be empty"),
 		},
 	}
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks.UserRepo)
+			mockUserRepo := new(user.UsersRepoMock)
 			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
+			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.TargetEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks.RelationsRepo)
+			mockRelationRepo := new(friend.FriendsRepoMock)
 			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
 				Return(tc.repoExpResultMock, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
-			res, err := relationService.CreateSubscriptionRelation(ctx, tc.input)
+			relationService := FriendService{friendRepo: mockRelationRepo, userRepo: mockUserRepo}
+
+			var res bool
+			err := relationService.CreateSubscription(ctx, tc.input)
+			if err == nil {
+				res = true
+			}
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
@@ -541,141 +508,125 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 func TestService_CreateBlockRelation(t *testing.T) {
 	tcs := map[string]struct {
 		input                   CreateRelationsInput
-		userRepoExpResultMock1  dbmodels.User
-		userRepoExpResultMock2  dbmodels.User
-		createRelationInputMock dbmodels.Relation
+		userRepoExpResultMock1  models2.User
+		userRepoExpResultMock2  models2.User
+		createRelationInputMock models2.UserFriend
 		repoExpResultMock       bool
 		isExistMock             bool
-		expResult               CreateRelationsResponse
+		expResult               bool
 		expErr                  error
 	}{
 		"success": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock: true,
 			isExistMock:       false,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				AddresseeID:    4,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.Block,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.Blocked),
 			},
-			expResult: CreateRelationsResponse{
-				Success: true,
-			},
+			expResult: true,
 		},
 		"case requester users not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock:      false,
 			isExistMock:            false,
-			userRepoExpResultMock1: dbmodels.User{},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{},
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    0,
-				AddresseeID:    4,
-				RequesterEmail: "",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.Block,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  0,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.Blocked),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Email cannot be empty"),
+			expResult: false,
+			expErr:    errors.New("Email cannot be empty"),
 		},
 		"case addressee users not found": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "",
+				TargetEmail:    "",
 			},
 			repoExpResultMock: false,
 			isExistMock:       false,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "",
-				RelationType:   utils.Block,
+			userRepoExpResultMock2: models2.User{},
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				RelationType: null.IntFrom(utils.Blocked),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Email cannot be empty"),
+			expResult: false,
+			expErr:    errors.New("Email cannot be empty"),
 		},
 		"case error create friends because friend friends is existed ": {
 			input: CreateRelationsInput{
 				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
+				TargetEmail:    "lisa@example.com",
 			},
 			repoExpResultMock: false,
 			isExistMock:       true,
-			userRepoExpResultMock1: dbmodels.User{
-				ID:       3,
-				Email:    "common@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock1: models2.User{
+				ID:    3,
+				Email: "common@example.com",
 			},
-			userRepoExpResultMock2: dbmodels.User{
-				ID:       4,
-				Email:    "lisa@example.com",
-				IsActive: null.BoolFrom(true),
+			userRepoExpResultMock2: models2.User{
+				ID:    4,
+				Email: "lisa@example.com",
 			},
-			createRelationInputMock: dbmodels.Relation{
-				RequesterID:    3,
-				AddresseeID:    4,
-				RequesterEmail: "common@example.com",
-				AddresseeEmail: "lisa@example.com",
-				RelationType:   utils.Block,
+			createRelationInputMock: models2.UserFriend{
+				RequesterID:  3,
+				TargetID:     4,
+				RelationType: null.IntFrom(utils.Blocked),
 			},
-			expResult: CreateRelationsResponse{
-				Success: false,
-			},
-			expErr: errors.New("Email cannot be empty"),
+			expResult: false,
+			expErr:    errors.New("Email cannot be empty"),
 		},
 	}
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks.UserRepo)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
+			mockUsersRepo := new(user.UsersRepoMock)
+			mockUsersRepo.On("GetUserByEmail", mock.Anything, tc.input.RequesterEmail).
 				Return(tc.userRepoExpResultMock1, tc.expErr)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.AddresseeEmail).
+			mockUsersRepo.On("GetUserByEmail", mock.Anything, tc.input.TargetEmail).
 				Return(tc.userRepoExpResultMock2, tc.expErr)
 
-			mockRelationRepo := new(mocks.RelationsRepo)
-			mockRelationRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mockFriendRepo := new(friend.FriendsRepoMock)
+			mockFriendRepo.On("IsRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
-			mockRelationRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
+			mockFriendRepo.On("CreateRelation", mock.Anything, tc.createRelationInputMock).
 				Return(tc.repoExpResultMock, tc.expErr)
-			mockRelationRepo.On("DeleteRelation", mock.Anything, tc.userRepoExpResultMock1.ID, tc.userRepoExpResultMock2.ID, utils.Subscribe).
+			mockFriendRepo.On("DeleteRelation", mock.Anything, tc.userRepoExpResultMock1.ID, tc.userRepoExpResultMock2.ID, utils.Subscribe).
 				Return(nil, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
-			res, err := relationService.CreateBlockRelation(ctx, tc.input)
+			relationService := FriendService{friendRepo: mockFriendRepo, userRepo: mockUsersRepo}
+
+			var res bool
+			err := relationService.CreateBlock(ctx, tc.input)
+			if err == nil {
+				res = true
+			}
+
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
 			} else {
@@ -691,7 +642,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 func TestService_GetEmailReceive(t *testing.T) {
 	tcs := map[string]struct {
 		input                   EmailReceiveInput
-		expUserByEmailMock      dbmodels.User
+		expUserByEmailMock      models2.User
 		expIdsEmail             []int
 		expRequesterIdsRelation []int
 		expEmailFromText        []string
@@ -710,7 +661,7 @@ func TestService_GetEmailReceive(t *testing.T) {
 				Sender: "andy@example.com",
 				Text:   "Hello World! lisa@example.com",
 			},
-			expUserByEmailMock: dbmodels.User{
+			expUserByEmailMock: models2.User{
 				ID:    1,
 				Email: "andy@example.com",
 			},
@@ -731,33 +682,23 @@ func TestService_GetEmailReceive(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
-			mockUserRepo := new(mocks.UserRepo)
-			mockUserRepo.On("GetUserByEmail", mock.Anything, tc.input.Sender).
+			mockUsersRepo := new(user.UsersRepoMock)
+			mockUsersRepo.On("GetUserByEmail", mock.Anything, tc.input.Sender).
 				Return(tc.expUserByEmailMock, tc.expErr)
 
-			mockRelationRepo := new(mocks.RelationsRepo)
-			mockRelationRepo.On("GetRelationIDsOfUser", mock.Anything, tc.expUserByEmailMock.ID, 1).
+			mockFriendsRepo := new(friend.FriendsRepoMock)
+			mockFriendsRepo.On("GetRelationIDs", mock.Anything, tc.expUserByEmailMock.ID, 1).
 				Return(tc.expIdsEmail, tc.expErr)
-			mockRelationRepo.On("GetRequesterIDRelation", mock.Anything, mock.Anything, mock.Anything).
+			mockFriendsRepo.On("GetRequesterIDFriends", mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.expRequesterIdsRelation, tc.expErr)
 
-			mockUtils := new(utilsmock.UtilsInf)
-			mockUtils.On("FindEmailFromText", tc.input.Text).
-				Return(tc.expListEmail, tc.expErr)
-
-			mockUserRepo.On("GetUserIDsByEmail", mock.Anything, tc.expListEmail).
+			mockUsersRepo.On("GetUserIDsByEmail", mock.Anything, tc.expListEmail).
 				Return(tc.expUserIDByEmail, tc.expErr)
 
-			mockUtils.On("UniqueSlice", mock.Anything).
-				Return(tc.expReceiveIDs, tc.expErr)
-
-			mockUtils.On("GetReceiverID", mock.Anything, mock.Anything).
-				Return(tc.expReceiveIDs, tc.expErr)
-
-			mockUserRepo.On("GetListEmailByIDs", mock.Anything, tc.expReceiveIDs).
+			mockUsersRepo.On("GetEmailsByIDs", mock.Anything, tc.expReceiveIDs).
 				Return(tc.expListEmailResult, tc.expErr)
 
-			relationService := RelationsService{relationsRepository: mockRelationRepo, userRepository: mockUserRepo}
+			relationService := FriendService{friendRepo: mockFriendsRepo, userRepo: mockUsersRepo}
 			res, err := relationService.GetEmailReceive(ctx, tc.input)
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())

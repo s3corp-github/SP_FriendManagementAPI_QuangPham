@@ -4,12 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
-	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/orm/models"
-
 	"github.com/friendsofgo/errors"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
 	"github.com/stretchr/testify/require"
-	"github.com/volatiletech/null/v8"
 )
 
 var dbURL = "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
@@ -23,14 +21,10 @@ func TestRepository_CreateUser(t *testing.T) {
 	}{
 		"success": {
 			input: models.User{
-				Email:    "nhutquang23@gmail.com",
-				Phone:    null.StringFrom("0343450044"),
-				IsActive: null.BoolFrom(true),
+				Email: "nhutquang23@gmail.com",
 			},
 			expResult: models.User{
-				Email:    "nhutquang23@gmail.com",
-				Phone:    null.StringFrom("0343450044"),
-				IsActive: null.BoolFrom(true),
+				Email: "nhutquang23@gmail.com",
 			},
 		},
 	}
@@ -39,7 +33,7 @@ func TestRepository_CreateUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -69,9 +63,7 @@ func TestRepository_GetUserByEmail(t *testing.T) {
 		"success": {
 			input: "andy@example.com",
 			expResult: models.User{
-				Email:    "andy@example.com",
-				Phone:    null.StringFrom("123456"),
-				IsActive: null.BoolFrom(true),
+				Email: "andy@example.com",
 			},
 		},
 		"email is empty": {
@@ -85,7 +77,7 @@ func TestRepository_GetUserByEmail(t *testing.T) {
 			ctx := context.Background()
 
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.users;")
@@ -116,9 +108,7 @@ func TestRepository_GetUserByID(t *testing.T) {
 		"success": {
 			input: 3,
 			expResult: models.User{
-				Email:    "common@example.com",
-				Phone:    null.StringFrom("123456"),
-				IsActive: null.BoolFrom(true),
+				Email: "common@example.com",
 			},
 		},
 	}
@@ -127,7 +117,7 @@ func TestRepository_GetUserByID(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -168,7 +158,7 @@ func TestRepository_GetUserIDsByEmail(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -189,15 +179,27 @@ func TestRepository_GetUserIDsByEmail(t *testing.T) {
 
 func TestRepository_GetListUser(t *testing.T) {
 	tcs := map[string]struct {
-		expResult []string
+		expResult models.UserSlice
 		expErr    error
 	}{
 		"success": {
-			expResult: []string{
-				"andy@example.com",
-				"john@example.com",
-				"common@example.com",
-				"lisa@example.com",
+			expResult: models.UserSlice{
+				{
+					Email: "andy@example.com",
+					Name:  "andy",
+				},
+				{
+					Email: "john@example.com",
+					Name:  "john",
+				},
+				{
+					Email: "common@example.com",
+					Name:  "common",
+				},
+				{
+					Email: "lisa@example.com",
+					Name:  "lisa",
+				},
 			},
 		},
 	}
@@ -207,12 +209,12 @@ func TestRepository_GetListUser(t *testing.T) {
 			ctx := context.Background()
 
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
 			userRepo := NewUserRepository(dbConn)
-			res, err := userRepo.GetAllUser(ctx)
+			res, err := userRepo.GetUsers(ctx)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())

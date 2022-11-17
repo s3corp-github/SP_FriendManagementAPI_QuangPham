@@ -11,11 +11,11 @@ import (
 
 type IService interface {
 	CreateFriend(ctx context.Context, input CreateRelationsInput) error
-	CreateSubscription(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error)
-	CreateBlock(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error)
-	GetAllFriends(ctx context.Context, input GetAllFriendsInput) ([]string, error)
+	CreateSubscription(ctx context.Context, input CreateRelationsInput) error
+	CreateBlock(ctx context.Context, input CreateRelationsInput) error
+	GetFriends(ctx context.Context, input GetAllFriendsInput) ([]string, error)
 	GetCommonFriends(ctx context.Context, input CommonFriendsInput) ([]string, error)
-	GetEmailReceive(ctx context.Context, input EmailReceiveInput) (EmailReceiveResponse, error)
+	GetEmailReceive(ctx context.Context, input EmailReceiveInput) ([]string, error)
 }
 
 // FriendService type contain repository needed
@@ -27,7 +27,7 @@ type FriendService struct {
 // NewService create new friends service
 func NewService(db *sql.DB) IService {
 	return FriendService{
-		friendRepo: friend.NewRelationsRepository(db),
+		friendRepo: friend.NewFriendsRepository(db),
 		userRepo:   user.NewUserRepository(db),
 	}
 }

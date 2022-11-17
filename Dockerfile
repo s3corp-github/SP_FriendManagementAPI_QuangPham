@@ -19,7 +19,7 @@ RUN go mod tidy
 RUN go get github.com/lib/pq
 
 # compile application
-RUN go build main.go
+RUN go build ./cmd/served/main.go
 
 # container listens on specified network ports at runtime
 EXPOSE 8080

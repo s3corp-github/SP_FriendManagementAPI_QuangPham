@@ -27,40 +27,39 @@ func main() {
 
 	// Start server with port 8080
 	log.Println("Server start at port 8080")
-	if err := http.ListenAndServe(config.ServerAddress, router); err != nil {
+	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Println("Error start server with port 8080", err)
 	}
 }
 
 func initRouter(dbConn *sql.DB) *chi.Mux {
-	userHandler := rest.NewUserHandler(dbConn)
-	relationHandler := rest.NewRelationsHandler(dbConn)
+	handler := rest.NewHandler(dbConn)
 	router := chi.NewRouter()
 	router.Use(utils.LogRequest)
 
 	router.Route("/", func(r chi.Router) {
-		r.Mount("/users", userRouter(userHandler))
-		r.Mount("/relations", relationRouter(relationHandler))
+		r.Mount("/users", usersRouter(handler))
+		r.Mount("/friends", friendsRouter(handler))
 	})
 
 	return router
 }
 
-func userRouter(userHandler rest.UsersHandler) http.Handler {
+func usersRouter(userHandler rest.Handler) http.Handler {
 	router := chi.NewRouter()
 	router.Post("/", userHandler.CreateUser)
 	router.Get("/", userHandler.GetListUser)
 	return router
 }
 
-func relationRouter(relationHandler rest.RelationsHandler) http.Handler {
+func friendsRouter(friendsHandler rest.Handler) http.Handler {
 	router := chi.NewRouter()
-	router.Post("/friend", relationHandler.CreateFriendsRelation)
-	router.Post("/subscription", relationHandler.CreateSubscriptionRelation)
-	router.Post("/block", relationHandler.CreateBlockRelation)
-	router.Post("/friends", relationHandler.GetAllFriendOfUser)
-	router.Post("/commonfriends", relationHandler.GetCommonFriend)
-	router.Post("/emailreceive", relationHandler.GetEmailReceive)
+	router.Post("/friend", friendsHandler.CreateFriends)
+	router.Post("/subscription", friendsHandler.CreateSubscription)
+	router.Post("/block", friendsHandler.CreateBlock)
+	router.Post("/friends", friendsHandler.GetFriends)
+	router.Post("/commonfriends", friendsHandler.GetCommonFriends)
+	router.Post("/emailreceive", friendsHandler.GetEmailReceive)
 
 	return router
 }

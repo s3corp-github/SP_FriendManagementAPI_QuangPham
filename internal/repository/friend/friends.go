@@ -4,51 +4,37 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/models"
-
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type friendsRepo struct {
-	connection *sql.DB
+	db *sql.DB
 }
 
-func NewRelationsRepository(db *sql.DB) repository.FriendsRepo {
+func NewFriendsRepository(db *sql.DB) repository.FriendsRepo {
 	return friendsRepo{
-		connection: db,
+		db: db,
 	}
 }
 
-func (repo friendsRepo) IsRelationExist(ctx context.Context, requesterId int, addresseeId int, relationType int) (bool, error) {
-	if relationType == utils.FriendRelation {
-		isExists, err := models.UserFriends(
-			models.UserFriendWhere.RelationType.EQ(null.IntFrom(relationType)),
-			models.UserFriendWhere.RequesterID.EQ(addresseeId),
-			models.UserFriendWhere.TargetID.EQ(requesterId),
-		).Exists(ctx, repo.connection)
-		if err != nil {
-			return false, err
-		}
-
-		if isExists == true {
-			return true, nil
-		}
-	}
-
-	isExists, err := models.UserFriends(
-		models.UserFriendWhere.RelationType.EQ(null.IntFrom(relationType)),
-		models.UserFriendWhere.RequesterID.EQ(requesterId),
-		models.UserFriendWhere.TargetID.EQ(addresseeId),
-	).Exists(ctx, repo.connection)
-	if err != nil {
-		return false, err
-	}
-
-	return isExists, nil
+func (repo friendsRepo) IsRelationExist(ctx context.Context, requesterID int, targetID int, relationType int) (bool, error) {
+	return models.UserFriends(
+		qm.Where(
+			models.UserFriendColumns.RequesterID+" = ? and "+
+				models.UserFriendColumns.TargetID+" = ? and "+
+				models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, relationType,
+		),
+		qm.Or2(
+			qm.Where(
+				models.UserFriendColumns.RequesterID+" = ? and "+
+					models.UserFriendColumns.TargetID+" = ? "+
+					models.UserFriendColumns.RelationType+"= ? ", targetID, requesterID, relationType),
+		),
+	).Exists(ctx, repo.db)
 }
 
 // CreateUserFriend create new user friends
@@ -59,21 +45,20 @@ func (repo friendsRepo) CreateUserFriend(ctx context.Context, input models.UserF
 		RelationType: input.RelationType,
 	}
 
-	return relation.Insert(ctx, repo.connection, boil.Infer())
+	return relation.Insert(ctx, repo.db, boil.Infer())
 }
 
-func (repo friendsRepo) GetRelationIDsOfUser(ctx context.Context, requesterId int, relationType int) ([]int, error) {
+func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterId int, relationType int) ([]int, error) {
 	var qms []qm.QueryMod
 	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? OR "+models.UserFriendColumns.TargetID+" = ?", requesterId, requesterId))
 	qms = append(qms, qm.Where(models.UserFriendColumns.RelationType+" = ?", relationType))
 
-	friendRelations, err := models.UserFriends(qms...).All(ctx, repo.connection)
+	friendRelations, err := models.UserFriends(qms...).All(ctx, repo.db)
 	if err != nil {
 		return nil, err
 	}
 
 	userIDs := make([]int, len(friendRelations))
-
 	for idx, o := range friendRelations {
 		if o.RequesterID != requesterId {
 			userIDs[idx] = o.RequesterID
@@ -85,29 +70,26 @@ func (repo friendsRepo) GetRelationIDsOfUser(ctx context.Context, requesterId in
 	return userIDs, nil
 }
 func (repo friendsRepo) DeleteRelation(ctx context.Context, requesterId int, addresseeId int, relationType int) error {
-
 	_, err := models.UserFriends(
 		models.UserFriendWhere.RelationType.EQ(null.IntFrom(relationType)),
 		models.UserFriendWhere.RequesterID.EQ(requesterId),
 		models.UserFriendWhere.TargetID.EQ(addresseeId),
-	).DeleteAll(ctx, repo.connection)
+	).DeleteAll(ctx, repo.db)
 
 	return err
 }
 
-func (repo friendsRepo) GetRequesterIDRelation(ctx context.Context, requesterId int, relationType int) ([]int, error) {
-
+func (repo friendsRepo) GetRequesterIDFriends(ctx context.Context, requesterId int, relationType int) ([]int, error) {
 	var qms []qm.QueryMod
 	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? ", requesterId))
 	qms = append(qms, qm.Where(models.UserFriendColumns.RelationType+" = ?", relationType))
 
-	friendRelations, err := models.UserFriends(qms...).All(ctx, repo.connection)
+	friendRelations, err := models.UserFriends(qms...).All(ctx, repo.db)
 	if err != nil {
 		return nil, err
 	}
 
 	userIDs := make([]int, len(friendRelations))
-
 	for idx, o := range friendRelations {
 		if o.RequesterID != requesterId {
 			userIDs[idx] = o.RequesterID

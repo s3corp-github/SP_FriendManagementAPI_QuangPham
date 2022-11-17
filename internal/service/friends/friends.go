@@ -2,11 +2,11 @@ package friends
 
 import (
 	"context"
+	"regexp"
 
-	"github.com/friendsofgo/errors"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/models"
 	"github.com/volatiletech/null/v8"
 )
 
@@ -15,10 +15,10 @@ var (
 	isValidToCreateRelationFunc = isValidToCreateRelation
 )
 
-// CreateRelationsInput param using for create friend friends
+// CreateRelationsInput param using for create friends
 type CreateRelationsInput struct {
 	RequesterEmail string
-	AddresseeEmail string
+	TargetEmail    string
 }
 
 // GetAllFriendsInput param using for get list friend of users
@@ -28,8 +28,8 @@ type GetAllFriendsInput struct {
 
 // CommonFriendsInput param using for get list common friend of two users
 type CommonFriendsInput struct {
-	FirstEmail  string
-	SecondEmail string
+	RequesterEmail string
+	TargetEmail    string
 }
 
 // EmailReceiveInput param using for receive email
@@ -51,279 +51,283 @@ type EmailReceiveResponse struct {
 	Recipients []string `json:"recipients"`
 }
 
-// GetAllFriends get all friends of users by input
-func (serv FriendService) GetAllFriends(ctx context.Context, input GetAllFriendsInput) ([]string, error) {
+// GetFriends get all friends of users by input
+func (serv FriendService) GetFriends(ctx context.Context, input GetAllFriendsInput) ([]string, error) {
 	user, err := serv.userRepo.GetUserByEmail(ctx, input.Email)
 	if err != nil {
 		return nil, err
 	}
 
-	userIDs, err := serv.friendRepo.GetRelationIDsOfUser(ctx, user.ID, utils.FriendRelation)
+	userIDs, err := serv.friendRepo.GetRelationIDs(ctx, user.ID, utils.FriendRelation)
 	if err != nil {
 		return nil, err
 	}
 
-	emails, err := serv.userRepo.GetListEmailByIDs(ctx, userIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	return emails, nil
+	return serv.userRepo.GetEmailsByIDs(ctx, userIDs)
 }
 
 // CreateFriend function implement create friend relationship
 func (serv FriendService) CreateFriend(ctx context.Context, input CreateRelationsInput) error {
-	requester, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
+	requesterUser, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		return errors.New(ErrMessageRequesterEmailFromRequest)
+		return ErrRequestEmailInvalid
 	}
 
-	// requester email not exist
-	if requester.Email == "" {
-		return errors.New(ErrMessageRequesterEmailNotExist)
-	}
-
-	//get addresseeId from email request
-	addressee, err := serv.userRepo.GetUserByEmail(ctx, input.AddresseeEmail)
+	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
-		return errors.New(ErrMessageAddresseeEmailFromRequest)
-	}
-	// requester email not exist
-	if addressee.Email == "" {
-		return errors.New(ErrMessageAddresseeEmailNotExist)
+		return ErrTargetEmailInvalid
 	}
 
-	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requester.ID, addressee.ID, utils.FriendRelation)
+	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID, utils.FriendRelation)
 	if !isValid || err != nil {
-		return err
+		return ErrTwoEmailAlreadyFriend
 	}
 
-	// insert friends two email, relationType 1 is friend
 	relationFriendInput := models.UserFriend{
-		RequesterID:  requester.ID,
-		TargetID:     addressee.ID,
+		RequesterID:  requesterUser.ID,
+		TargetID:     targetUser.ID,
 		RelationType: null.IntFrom(utils.FriendRelation),
 	}
+
 	return serv.friendRepo.CreateUserFriend(ctx, relationFriendInput)
 
 }
 
 // GetCommonFriends function implement get common friend
 func (serv FriendService) GetCommonFriends(ctx context.Context, input CommonFriendsInput) ([]string, error) {
-	var listCommonFriend []string
-
-	//get requesterId from email request
-	firstUser, err := serv.userRepo.GetUserByEmail(ctx, input.FirstEmail)
+	firstUser, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
 		return nil, err
 	}
 
-	//get first friend list
-	firstIdsList, err := serv.friendRepo.GetRelationIDsOfUser(ctx, firstUser.ID, utils.FriendRelation)
+	firstIdsList, err := serv.friendRepo.GetRelationIDs(ctx, firstUser.ID, utils.FriendRelation)
 	if err != nil {
 		return nil, err
 	}
 
-	//get requesterId from email request
-	secondUser, err := serv.userRepo.GetUserByEmail(ctx, input.SecondEmail)
+	secondUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
 		return nil, err
 	}
 
-	//get second friend list
-	secondIdsList, err := serv.friendRepo.GetRelationIDsOfUser(ctx, secondUser.ID, utils.FriendRelation)
+	secondIdsList, err := serv.friendRepo.GetRelationIDs(ctx, secondUser.ID, utils.FriendRelation)
 	if err != nil {
 		return nil, err
 	}
 
-	//Intersection two list friend
-	listCommonIds := utils.Intersection(firstIdsList, secondIdsList)
+	userIds := getCommonUserIDs(firstIdsList, secondIdsList)
 
-	listCommonFriend, err = serv.userRepo.GetListEmailByIDs(ctx, listCommonIds)
-	if err != nil {
-		return nil, err
-	}
-
-	return listCommonFriend, nil
-
+	return serv.userRepo.GetEmailsByIDs(ctx, userIds)
 }
 
 // isRelationExist function check friends is exists
 func isRelationExist(ctx context.Context, repo repository.FriendsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
-	isExistRelation, err := repo.IsRelationExist(ctx, requesterID, addresseeID, relationType)
-	if err != nil {
-		return false, err
-	}
-
-	return isExistRelation, nil
+	return repo.IsRelationExist(ctx, requesterID, addresseeID, relationType)
 }
 
 // isRelationExist function check valid to create friends
-func isValidToCreateRelation(ctx context.Context, repo repository.FriendsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
-	isExistRelation, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, relationType)
+func isValidToCreateRelation(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int, relationType int) (bool, error) {
+	isExistRelation, err := isRelationExistFunc(ctx, repo, requesterID, targetID, relationType)
 	if err != nil {
 		return false, err
 	}
 
 	if isExistRelation {
-		return false, errors.New("Relation is exists")
+		return false, ErrRelationIsExists
 	}
 
-	isValid := false
+	var isValid bool
 
 	switch relationType {
 	case utils.FriendRelation:
-		isRequesterIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, utils.Block)
-		isAddresseeIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, addresseeID, utils.Block)
+		isRequesterIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, targetID, utils.Blocked)
+		isTargetIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, targetID, utils.Blocked)
 		if err != nil {
 			return false, err
 		}
 
-		if !isRequesterIDBlock && !isAddresseeIDBlock {
+		if !isRequesterIDBlock && !isTargetIDBlock {
 			isValid = true
 		}
 	case utils.Subscribe:
 		isValid = true
-	case utils.Block:
+	case utils.Blocked:
 		isValid = true
-
-	}
-	if err != nil {
-		return false, err
 	}
 
-	if isValid == false {
-		return false, errors.New(ErrMessageUnableCreateRelation)
-	}
 	return isValid, nil
 }
 
 // CreateSubscription function create subscription friends
-func (serv FriendService) CreateSubscription(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error) {
-	//get requesterId from email request
+func (serv FriendService) CreateSubscription(ctx context.Context, input CreateRelationsInput) error {
 	requester, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
+		return err
 	}
 
-	if requester.Email == "" {
-		return CreateRelationsResponse{Success: false}, errors.New(ErrMessageRequesterEmailNotExist)
-	}
-
-	//get addresseeId from email request
-	target, err := serv.userRepo.GetUserByEmail(ctx, input.AddresseeEmail)
+	target, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
+		return err
 	}
 
-	if target.Email == "" {
-		return CreateRelationsResponse{Success: false}, errors.New(ErrMessageAddresseeEmailNotExist)
-	}
-
-	//check if users blocked or users is friend return false
 	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requester.ID, target.ID, utils.Subscribe)
-	//if users has friends block or friend return false
-	if !isValid || err != nil {
-		return CreateRelationsResponse{Success: false}, err
+	if err != nil {
+		return err
 	}
 
-	// insert friends friend two email, relationType 1 is friend
-	relationFriendInput := models.Relation{
-		RequesterID:    requester.ID,
-		AddresseeID:    target.ID,
-		RequesterEmail: requester.Email,
-		AddresseeEmail: target.Email,
-		RelationType:   utils.Subscribe,
+	if !isValid {
+		return ErrTwoEmailInvalidCreateSub
 	}
-	result, err := serv.friendRepo.CreateRelation(ctx, relationFriendInput)
 
-	return CreateRelationsResponse{Success: result}, err
+	relationFriendInput := models.UserFriend{
+		RequesterID:  requester.ID,
+		TargetID:     target.ID,
+		RelationType: null.IntFrom(utils.Subscribe),
+	}
+
+	return serv.friendRepo.CreateUserFriend(ctx, relationFriendInput)
 }
 
 // CreateBlock function create block friends
-func (serv FriendService) CreateBlock(ctx context.Context, input CreateRelationsInput) (CreateRelationsResponse, error) {
-	//get requesterId from email request
-	requester, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
+func (serv FriendService) CreateBlock(ctx context.Context, input CreateRelationsInput) error {
+	requesterUser, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
+		return err
 	}
 
-	//get addresseeId from email request
-	target, err := serv.userRepo.GetUserByEmail(ctx, input.AddresseeEmail)
+	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
+		return err
 	}
 
-	//check if users blocked or users is friend return false
-	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requester.ID, target.ID, utils.Block)
-	//if users has friends block or friend return false
-	if !isValid || err != nil {
-		return CreateRelationsResponse{Success: false}, err
-	}
-
-	// insert friends friend two email, relationType 1 is friend
-	relationFriendInput := models.Relation{
-		RequesterID:    requester.ID,
-		AddresseeID:    target.ID,
-		RequesterEmail: requester.Email,
-		AddresseeEmail: target.Email,
-		RelationType:   utils.Block,
-	}
-	result, err := serv.friendRepo.CreateRelation(ctx, relationFriendInput)
+	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID, utils.Blocked)
 	if err != nil {
-		return CreateRelationsResponse{Success: false}, err
+		return err
 	}
 
-	// if insert block is success then delete subscribe friends
-	err = serv.friendRepo.DeleteRelation(ctx, requester.ID, target.ID, utils.Subscribe)
+	if !isValid {
+		return ErrTwoEmailInvalidCreateBlock
+	}
 
-	return CreateRelationsResponse{Success: result}, err
+	relationFriendInput := models.UserFriend{
+		RequesterID:  requesterUser.ID,
+		TargetID:     targetUser.ID,
+		RelationType: null.IntFrom(utils.Blocked),
+	}
+
+	if err = serv.friendRepo.CreateUserFriend(ctx, relationFriendInput); err != nil {
+		return ErrTwoEmailInvalidCreateBlock
+	}
+
+	if err = serv.friendRepo.DeleteRelation(ctx, requesterUser.ID, targetUser.ID, utils.Subscribe); err != nil {
+		return ErrTwoEmailInvalidCreateBlock
+	}
+
+	return nil
 }
 
 // GetEmailReceive function email receive info
-func (serv FriendService) GetEmailReceive(ctx context.Context, input EmailReceiveInput) (EmailReceiveResponse, error) {
-	//get requesterId from email request
+func (serv FriendService) GetEmailReceive(ctx context.Context, input EmailReceiveInput) ([]string, error) {
 	requester, err := serv.userRepo.GetUserByEmail(ctx, input.Sender)
-
 	if err != nil {
-		return EmailReceiveResponse{Success: false}, errors.New(ErrMessageEmailNotExist)
+		return nil, err
 	}
 
-	//get lst id friend
-	friendIDs, err := serv.friendRepo.GetRelationIDsOfUser(ctx, requester.ID, utils.FriendRelation)
-
+	friendIDs, err := serv.friendRepo.GetRelationIDs(ctx, requester.ID, utils.FriendRelation)
 	if err != nil {
-		return EmailReceiveResponse{Success: false}, err
+		return nil, err
 	}
 
-	// get lst id subscription
-	subscribeIDs, err := serv.friendRepo.GetRequesterIDRelation(ctx, requester.ID, utils.Subscribe)
+	subscribeIDs, err := serv.friendRepo.GetRequesterIDFriends(ctx, requester.ID, utils.Subscribe)
 	if err != nil {
-		return EmailReceiveResponse{Success: false}, err
+		return nil, err
 	}
 
-	// get users who mentioned in text
-	mentionedEmails := utils.FindEmailFromText(input.Text)
+	mentionedEmails := findEmailFromText(input.Text)
 	userIDsMentionedEmails, err := serv.userRepo.GetUserIDsByEmail(ctx, mentionedEmails)
-
-	// get requester id of block friends
-	blocksID, err := serv.friendRepo.GetRequesterIDRelation(ctx, requester.ID, utils.Block)
-
 	if err != nil {
-		return EmailReceiveResponse{Success: false}, err
+		return nil, err
 	}
 
-	// users can receiver update
+	blocksID, err := serv.friendRepo.GetRequesterIDFriends(ctx, requester.ID, utils.Blocked)
+	if err != nil {
+		return nil, err
+	}
+
 	receiversIDnoMentioned := append(friendIDs, subscribeIDs...)
-	receiversID := utils.GetReceiverID(utils.UniqueSlice(append(receiversIDnoMentioned, userIDsMentionedEmails...)), append(blocksID, requester.ID))
+	receiversID := getReceiverID(uniqueSlice(append(receiversIDnoMentioned, userIDsMentionedEmails...)), append(blocksID, requester.ID))
 
-	emails, err := serv.userRepo.GetListEmailByIDs(ctx, receiversID)
+	return serv.userRepo.GetEmailsByIDs(ctx, receiversID)
+}
 
-	if err != nil {
-		return EmailReceiveResponse{Success: false}, err
+// getCommonUserIDs find the same elements of two array
+func getCommonUserIDs(userID1, userID2 []int) []int {
+	userIDMap := make(map[int]bool)
+	for _, item := range userID1 {
+		userIDMap[item] = true
 	}
-	return EmailReceiveResponse{
-		Success:    true,
-		Recipients: emails,
-	}, nil
+
+	var commonUserIDs []int
+	for _, item := range userID2 {
+		if _, ok := userIDMap[item]; ok {
+			commonUserIDs = append(commonUserIDs, item)
+		}
+	}
+	return commonUserIDs
+}
+
+// getReceiverID get slice of receiver id
+func getReceiverID(userIDs1, userIDs2 []int) []int {
+
+	sameElements := getCommonUserIDs(userIDs1, userIDs2)
+
+	for _, v := range sameElements {
+		userIDs1 = removeIndex(userIDs1, indexOf(v, userIDs1))
+	}
+
+	return userIDs1
+}
+
+// removeIndex remove index in slice
+func removeIndex(userIDs []int, index int) []int {
+	return append(userIDs[:index], userIDs[index+1:]...)
+}
+
+// indexOf get index of value in slice
+func indexOf(element int, data []int) int {
+	for k, v := range data {
+		if element == v {
+			return k
+		}
+	}
+	return -1 //not found.
+}
+
+// uniqueSlice remove duplicate element in slice
+func uniqueSlice(intSlice []int) []int {
+	keys := make(map[int]bool)
+	var list []int
+
+	for _, entry := range intSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
+}
+
+// findEmailFromText return email mentioned in text
+func findEmailFromText(text string) []string {
+
+	regex := regexp.MustCompile(utils.EmailValidationRegex)
+
+	emailChain := regex.FindAllString(text, -1)
+
+	emails := make([]string, len(emailChain))
+
+	for index, emailCharacter := range emailChain {
+		emails[index] = emailCharacter
+	}
+	return emails
 }

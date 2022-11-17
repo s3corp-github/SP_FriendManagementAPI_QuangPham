@@ -40,16 +40,6 @@ func LoadConfig() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-
-	// re-validate
-	if config.DBDriver == "" {
-		log.Fatal("Cannot load DBDriver from config file.")
-	}
-
-	if config.ServerAddress == "" {
-		log.Fatal("Cannot load ServerAddress from config file.")
-	}
-
 	if config.DBSource == "" {
 		log.Fatal("Cannot load DBSource from config file.")
 	}

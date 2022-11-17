@@ -9,7 +9,7 @@ import (
 
 // Handler presents for handler
 type Handler struct {
-	userService   userService.UsersServ
+	userService   userService.IService
 	friendService friends.IService
 }
 

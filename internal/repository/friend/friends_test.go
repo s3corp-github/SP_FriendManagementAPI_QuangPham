@@ -4,17 +4,16 @@ import (
 	"context"
 	"testing"
 
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/models"
 	"github.com/volatiletech/null/v8"
 
 	"github.com/friendsofgo/errors"
 	"github.com/stretchr/testify/require"
 )
 
-var dbURL = "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
-var dbDriver = "postgres"
+var dbURL = "postgres://friends-management:@127.0.0.1:5432/friends-management?sslmode=disable"
 
 func TestRepository_CreateFriendRelation(t *testing.T) {
 	tcs := map[string]struct {
@@ -30,34 +29,28 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 			},
 			expResult: true,
 		},
-		"case missing addressee id": {
+		"case missing target id": {
 			input: models.UserFriend{
-				RequesterID:    1,
-				RequesterEmail: "andy@example.com",
-				AddresseeEmail: "john@example.com",
-				RelationType:   utils.FriendRelation,
+				RequesterID:  1,
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
 			expResult: false,
-			expErr:    errors.New(`dbmodels: unable to insert into relations: pq: insert or update on table "relations" violates foreign key constraint "relations_addressee_id_fkey"`),
+			expErr:    errors.New(`models: unable to insert into user_friends: pq: insert or update on table "user_friends" violates foreign key constraint "user_friends_target_id_fkey"`),
 		},
 		"case missing requester id": {
-			input: models.Relation{
-				AddresseeID:    2,
-				RequesterEmail: "andy@example.com",
-				AddresseeEmail: "john@example.com",
-				RelationType:   utils.FriendRelation,
+			input: models.UserFriend{
+				TargetID:     2,
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
 			expResult: false,
-			expErr:    errors.New(`dbmodels: unable to insert into relations: pq: insert or update on table "relations" violates foreign key constraint "relations_requester_id_fkey"`),
+			expErr:    errors.New(`models: unable to insert into user_friends: pq: insert or update on table "user_friends" violates foreign key constraint "user_friends_requester_id_fkey"`),
 		},
 		"case missing requester id and addressee id": {
-			input: models.Relation{
-				RequesterEmail: "andy@example.com",
-				AddresseeEmail: "john@example.com",
-				RelationType:   utils.FriendRelation,
+			input: models.UserFriend{
+				RelationType: null.IntFrom(utils.FriendRelation),
 			},
 			expResult: false,
-			expErr:    errors.New(`dbmodels: unable to insert into relations: pq: insert or update on table "relations" violates foreign key constraint "relations_requester_id_fkey"`),
+			expErr:    errors.New(`models: unable to insert into user_friends: pq: insert or update on table "user_friends" violates foreign key constraint "user_friends_requester_id_fkey"`),
 		},
 	}
 
@@ -65,12 +58,17 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			friendshipRepo := NewRelationsRepository(dbConn)
-			res, err := friendshipRepo.CreateRelation(ctx, tc.input)
+			friendshipRepo := NewFriendsRepository(dbConn)
+
+			var res bool
+			err = friendshipRepo.CreateUserFriend(ctx, tc.input)
+			if err != nil {
+				res = false
+			}
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -84,7 +82,7 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 
 }
 
-func TestRepository_GetRelationIDsOfUser(t *testing.T) {
+func TestRepository_GetRelationIDs(t *testing.T) {
 	tcs := map[string]struct {
 		requesterId  int
 		relationType int
@@ -96,7 +94,7 @@ func TestRepository_GetRelationIDsOfUser(t *testing.T) {
 			relationType: 1,
 			expResult:    []int{2, 3, 2},
 		},
-		"missing requesterId": {
+		"missing requestId": {
 			relationType: 1,
 			expErr:       errors.New(`requesterId cannot be null`),
 		},
@@ -110,12 +108,12 @@ func TestRepository_GetRelationIDsOfUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			friendshipRepo := NewRelationsRepository(dbConn)
-			res, err := friendshipRepo.GetRelationIDsOfUser(ctx, tc.requesterId, tc.relationType)
+			friendshipRepo := NewFriendsRepository(dbConn)
+			res, err := friendshipRepo.GetRelationIDs(ctx, tc.requesterId, tc.relationType)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -154,12 +152,12 @@ func TestRepository_GetRequesterIDRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			friendshipRepo := NewRelationsRepository(dbConn)
-			res, err := friendshipRepo.GetRequesterIDRelation(ctx, tc.requesterId, tc.relationType)
+			friendshipRepo := NewFriendsRepository(dbConn)
+			res, err := friendshipRepo.GetRequesterIDFriends(ctx, tc.requesterId, tc.relationType)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -207,11 +205,11 @@ func TestRepository_DeleteRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			friendshipRepo := NewRelationsRepository(dbConn)
+			friendshipRepo := NewFriendsRepository(dbConn)
 			err = friendshipRepo.DeleteRelation(ctx, tc.requesterId, tc.addresseeId, tc.relationType)
 
 			if tc.expErr != nil {
@@ -272,11 +270,11 @@ func TestRepository_IsRelationExist(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbDriver, dbURL)
+			dbConn, err := db.ConnectDB(dbURL)
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			friendshipRepo := NewRelationsRepository(dbConn)
+			friendshipRepo := NewFriendsRepository(dbConn)
 			result, err := friendshipRepo.IsRelationExist(ctx, tc.requesterId, tc.addresseeId, tc.relationType)
 
 			if tc.expErr != nil {

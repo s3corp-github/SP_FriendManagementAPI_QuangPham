@@ -2,81 +2,67 @@ package users
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
-	models "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/orm/models"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/user"
-
-	"github.com/volatiletech/null/v8"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 )
-
-// UsersService type contain users repository
-type UsersService struct {
-	userRepository repository.UsersRepo
-}
-
-// UsersServ define function of users
-type UsersServ interface {
-	CreateUser(ctx context.Context, input CreateUserInput) (UsersResponse, error)
-	GetListUser(ctx context.Context) (UsersEmailResponse, error)
-}
 
 // CreateUserInput param using create users
 type CreateUserInput struct {
-	Email    string
-	Phone    string
-	IsActive bool
+	Name  string
+	Email string
 }
 
-// UsersResponse response handler create users
-type UsersResponse struct {
-	ID       int
-	Email    string
-	Phone    string
-	IsActive bool
+// UserResponse response handler create users
+type UserResponse struct {
+	ID    int
+	Email string
 }
 
-// UsersEmailResponse type list email of users
-type UsersEmailResponse struct {
-	Email []string
-}
-
-// NewUserService create new users service
-func NewUserService(db *sql.DB) UsersServ {
-	return UsersService{
-		userRepository: user.NewUserRepository(db),
-	}
+// UserEmailResponse type list email of users
+type UserEmailResponse struct {
+	Email string
+	Name  string
 }
 
 // CreateUser creates new users
-func (serv UsersService) CreateUser(ctx context.Context, input CreateUserInput) (UsersResponse, error) {
-	user, err := serv.userRepository.CreateUser(ctx, models.User{
-		Email:    input.Email,
-		Phone:    null.StringFrom(input.Phone),
-		IsActive: null.BoolFrom(input.IsActive),
-	})
+func (serv UserService) CreateUser(ctx context.Context, input CreateUserInput) (UserResponse, error) {
+	checkEmail, err := serv.userRepository.CheckEmailIsExist(ctx, input.Email)
 	if err != nil {
-		return UsersResponse{}, err
+		return UserResponse{}, err
+	}
+	if checkEmail {
+		return UserResponse{}, ErrEmailExist
 	}
 
-	return UsersResponse{
-		ID:       user.ID,
-		Email:    user.Email,
-		Phone:    user.Phone.String,
-		IsActive: user.IsActive.Bool,
+	user, err := serv.userRepository.CreateUser(ctx, models.User{
+		Name:  input.Name,
+		Email: input.Email,
+	})
+	if err != nil {
+		return UserResponse{}, ErrCreateUser
+	}
+
+	return UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
 	}, nil
 }
 
-// GetListUser return list of users
-func (serv UsersService) GetListUser(ctx context.Context) (UsersEmailResponse, error) {
-	var userResult UsersEmailResponse
-	user, err := serv.userRepository.GetAllUser(ctx)
+// GetUsers return list of users
+func (serv UserService) GetUsers(ctx context.Context) ([]UserEmailResponse, error) {
+	var userResult []UserEmailResponse
+	users, err := serv.userRepository.GetUsers(ctx)
 	if err != nil {
-		return UsersEmailResponse{}, err
+		return nil, err
 	}
 
-	userResult.Email = user
+	for _, u := range users {
+		user := UserEmailResponse{
+			Name:  u.Name,
+			Email: u.Email,
+		}
+		userResult = append(userResult, user)
+	}
 
 	return userResult, nil
 }
