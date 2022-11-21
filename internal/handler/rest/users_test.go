@@ -14,21 +14,21 @@ import (
 func TestHandler_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
 		input      string
-		givenInput users.CreateUserInput
+		givenInput users.UserEmail
 		expCode    int
 		expBody    string
 		expErr     error
 	}{
 		"success": {
 			input:      `{"email":"john@gmail.com", "name":"john"}`,
-			givenInput: users.CreateUserInput{Name: "john", Email: "john@gmail.com"},
+			givenInput: users.UserEmail{Name: "john", Email: "john@gmail.com"},
 			expBody: `{"ID":15,"Email":"john@gmail.com"}
 `,
 			expCode: http.StatusCreated,
 		},
 		"case error email cannot blank": {
 			input:      `{"email":"", "name":""}`,
-			givenInput: users.CreateUserInput{},
+			givenInput: users.UserEmail{},
 			expBody:    "{\"message\":\"Invalid email address\"}\n",
 			expCode:    http.StatusBadRequest,
 			expErr:     ErrInvalidName,
@@ -89,11 +89,11 @@ func TestHandler_GetListUser(t *testing.T) {
 	}
 
 	tcsMockUserServ := map[string]struct {
-		result []users.UserEmailResponse
+		result []users.UserEmail
 		err    error
 	}{
 		"success": {
-			result: []users.UserEmailResponse{
+			result: []users.UserEmail{
 				{
 					Email: "andy@example.com",
 					Name:  "andy",
@@ -133,14 +133,14 @@ func TestHandler_GetListUser(t *testing.T) {
 func TestHandler_ValidateUserInput(t *testing.T) {
 	tcs := map[string]struct {
 		input     UsersRequest
-		expResult users.CreateUserInput
+		expResult users.UserEmail
 		expErr    error
 	}{
 		"success": {
 			input: UsersRequest{
 				Email: "john@gmail.com",
 			},
-			expResult: users.CreateUserInput{
+			expResult: users.UserEmail{
 				Email: "john@gmail.com",
 			},
 		},

@@ -12,12 +12,12 @@ import (
 
 func NewUserRepository(db *sql.DB) repository.UsersRepo {
 	return userRepository{
-		connection: db,
+		db: db,
 	}
 }
 
 type userRepository struct {
-	connection *sql.DB
+	db *sql.DB
 }
 
 // GetEmailsByIDs function get user emails by IDs
@@ -28,7 +28,7 @@ func (repo userRepository) GetEmailsByIDs(ctx context.Context, ids []int) ([]str
 		convertedIDs[index] = num
 	}
 
-	userResult, err := models.Users(qm.WhereIn(models.UserColumns.ID+" IN ?", convertedIDs...)).All(ctx, repo.connection)
+	userResult, err := models.Users(qm.WhereIn(models.UserColumns.ID+" IN ?", convertedIDs...)).All(ctx, repo.db)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (repo userRepository) GetEmailsByIDs(ctx context.Context, ids []int) ([]str
 func (repo userRepository) GetUserByID(ctx context.Context, id int) (models.User, error) {
 	var userResult models.User
 
-	if err := models.Users(models.UserWhere.ID.EQ(id)).Bind(ctx, repo.connection, &userResult); err != nil {
+	if err := models.Users(models.UserWhere.ID.EQ(id)).Bind(ctx, repo.db, &userResult); err != nil {
 		return models.User{}, err
 	}
 
@@ -53,7 +53,7 @@ func (repo userRepository) GetUserByID(ctx context.Context, id int) (models.User
 
 // CreateUser creates users
 func (repo userRepository) CreateUser(ctx context.Context, user models.User) (models.User, error) {
-	if err := user.Insert(ctx, repo.connection, boil.Infer()); err != nil {
+	if err := user.Insert(ctx, repo.db, boil.Infer()); err != nil {
 		return models.User{}, err
 	}
 
@@ -63,7 +63,7 @@ func (repo userRepository) CreateUser(ctx context.Context, user models.User) (mo
 // GetUserByEmail get users by email
 func (repo userRepository) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
 	var userResult models.User
-	if err := models.Users(models.UserWhere.Email.EQ(email)).Bind(ctx, repo.connection, &userResult); err != nil {
+	if err := models.Users(models.UserWhere.Email.EQ(email)).Bind(ctx, repo.db, &userResult); err != nil {
 		return models.User{}, err
 	}
 
@@ -80,7 +80,7 @@ func (repo userRepository) GetUserIDsByEmail(ctx context.Context, emails []strin
 	users, err := models.Users(
 		qm.Select(models.UserColumns.ID, models.UserColumns.Email),
 		qm.WhereIn(models.UserColumns.Email+" in ?", emailParams...),
-	).All(ctx, repo.connection)
+	).All(ctx, repo.db)
 	if err != nil {
 		return nil, err
 	}
@@ -97,12 +97,12 @@ func (repo userRepository) GetUserIDsByEmail(ctx context.Context, emails []strin
 func (repo userRepository) GetUsers(ctx context.Context) (models.UserSlice, error) {
 	return models.Users(
 		qm.Select(models.UserColumns.Name, models.UserColumns.Email),
-	).All(ctx, repo.connection)
+	).All(ctx, repo.db)
 }
 
 // CheckEmailIsExist check if email is existing in db
 func (repo userRepository) CheckEmailIsExist(ctx context.Context, email string) (bool, error) {
 	return models.Users(
 		models.UserWhere.Email.EQ(email),
-	).Exists(ctx, repo.connection)
+	).Exists(ctx, repo.db)
 }

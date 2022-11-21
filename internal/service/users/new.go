@@ -10,8 +10,8 @@ import (
 
 // IService define function of users
 type IService interface {
-	CreateUser(ctx context.Context, input CreateUserInput) (UserResponse, error)
-	GetUsers(ctx context.Context) ([]UserEmailResponse, error)
+	CreateUser(ctx context.Context, input UserEmail) (UserResponse, error)
+	GetUsers(ctx context.Context) ([]UserEmail, error)
 }
 
 // UserService type contain users repository

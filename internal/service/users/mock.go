@@ -14,18 +14,18 @@ type IServiceMock struct {
 }
 
 // CreateUser provides a mock function with given fields: ctx, input
-func (_m *IServiceMock) CreateUser(ctx context.Context, input CreateUserInput) (UserResponse, error) {
+func (_m *IServiceMock) CreateUser(ctx context.Context, input UserEmail) (UserResponse, error) {
 	ret := _m.Called(ctx, input)
 
 	var r0 UserResponse
-	if rf, ok := ret.Get(0).(func(context.Context, CreateUserInput) UserResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, UserEmail) UserResponse); ok {
 		r0 = rf(ctx, input)
 	} else {
 		r0 = ret.Get(0).(UserResponse)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, CreateUserInput) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, UserEmail) error); ok {
 		r1 = rf(ctx, input)
 	} else {
 		r1 = ret.Error(1)
@@ -35,15 +35,15 @@ func (_m *IServiceMock) CreateUser(ctx context.Context, input CreateUserInput) (
 }
 
 // GetUsers provides a mock function with given fields: ctx
-func (_m *IServiceMock) GetUsers(ctx context.Context) ([]UserEmailResponse, error) {
+func (_m *IServiceMock) GetUsers(ctx context.Context) ([]UserEmail, error) {
 	ret := _m.Called(ctx)
 
-	var r0 []UserEmailResponse
-	if rf, ok := ret.Get(0).(func(context.Context) []UserEmailResponse); ok {
+	var r0 []UserEmail
+	if rf, ok := ret.Get(0).(func(context.Context) []UserEmail); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]UserEmailResponse)
+			r0 = ret.Get(0).([]UserEmail)
 		}
 	}
 

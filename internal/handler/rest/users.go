@@ -50,13 +50,13 @@ func (h Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // validateUserInput validate users request and convert to service input
-func validateUserInput(input UsersRequest) (users.CreateUserInput, error) {
+func validateUserInput(input UsersRequest) (users.UserEmail, error) {
 	email := strings.TrimSpace(input.Email)
 	if _, err := mail.ParseAddress(email); err != nil {
-		return users.CreateUserInput{}, ErrInvalidEmail
+		return users.UserEmail{}, ErrInvalidEmail
 	}
 
-	return users.CreateUserInput{
+	return users.UserEmail{
 		Name:  input.Name,
 		Email: email,
 	}, nil

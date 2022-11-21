@@ -12,13 +12,13 @@ import (
 
 func TestService_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
-		input          CreateUserInput
+		input          UserEmail
 		expResult      UserResponse
 		expResultCheck bool
 		expErr         error
 	}{
 		"success": {
-			input: CreateUserInput{
+			input: UserEmail{
 				Email: "john1@gmail.com",
 			},
 			expResultCheck: false,
@@ -67,12 +67,12 @@ func TestService_CreateUser(t *testing.T) {
 
 func TestService_GetAllUser(t *testing.T) {
 	tcs := map[string]struct {
-		expResult     []UserEmailResponse
+		expResult     []UserEmail
 		expResultRepo models.UserSlice
 		expErr        error
 	}{
 		"success": {
-			expResult: []UserEmailResponse{
+			expResult: []UserEmail{
 				{
 					Email: "andy@example.com",
 					Name:  "andy",
