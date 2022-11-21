@@ -9,6 +9,7 @@ import (
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/user"
 )
 
+// IService define function of user friends
 type IService interface {
 	CreateFriend(ctx context.Context, input CreateRelationsInput) error
 	CreateSubscription(ctx context.Context, input CreateRelationsInput) error

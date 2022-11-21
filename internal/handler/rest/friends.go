@@ -260,6 +260,7 @@ func validateRelationCommonInput(relationReq FriendsRequest) (friends.CommonFrie
 	}, nil
 }
 
+// validateEmailReceiveInput function validate get receive email request
 func validateEmailReceiveInput(relationReq EmailReceiveRequest) (friends.EmailReceiveInput, error) {
 	requesterEmail := strings.TrimSpace(relationReq.Sender)
 	if _, err := mail.ParseAddress(requesterEmail); err != nil {

@@ -20,6 +20,7 @@ type userRepository struct {
 	connection *sql.DB
 }
 
+// GetEmailsByIDs function get user emails by IDs
 func (repo userRepository) GetEmailsByIDs(ctx context.Context, ids []int) ([]string, error) {
 	var emails []string
 	convertedIDs := make([]interface{}, len(ids))
@@ -39,6 +40,7 @@ func (repo userRepository) GetEmailsByIDs(ctx context.Context, ids []int) ([]str
 	return emails, nil
 }
 
+// GetUserByID function get user by ID
 func (repo userRepository) GetUserByID(ctx context.Context, id int) (models.User, error) {
 	var userResult models.User
 
@@ -68,6 +70,7 @@ func (repo userRepository) GetUserByEmail(ctx context.Context, email string) (mo
 	return userResult, nil
 }
 
+// GetUserIDsByEmail function get userIDS by emails
 func (repo userRepository) GetUserIDsByEmail(ctx context.Context, emails []string) ([]int, error) {
 	emailParams := make([]interface{}, len(emails))
 	for i, email := range emails {

@@ -21,6 +21,7 @@ func NewFriendsRepository(db *sql.DB) repository.FriendsRepo {
 	}
 }
 
+// IsRelationExist func check if relation 2 emails exists
 func (repo friendsRepo) IsRelationExist(ctx context.Context, requesterID int, targetID int, relationType int) (bool, error) {
 	if relationType == 1 {
 		return models.UserFriends(
@@ -58,6 +59,7 @@ func (repo friendsRepo) CreateUserFriend(ctx context.Context, input models.UserF
 	return relation.Insert(ctx, repo.db, boil.Infer())
 }
 
+// GetRelationIDs function get IDs of relations
 func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterID int, relationType int) ([]int, error) {
 	var qms []qm.QueryMod
 	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? OR "+models.UserFriendColumns.TargetID+" = ?", requesterID, requesterID))
@@ -79,6 +81,8 @@ func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterID int, rel
 
 	return userIDs, nil
 }
+
+// DeleteRelation function delete relation between 2 ids
 func (repo friendsRepo) DeleteRelation(ctx context.Context, requesterID int, targetID int, relationType int) error {
 	_, err := models.UserFriends(
 		models.UserFriendWhere.RelationType.EQ(null.IntFrom(relationType)),
@@ -89,6 +93,7 @@ func (repo friendsRepo) DeleteRelation(ctx context.Context, requesterID int, tar
 	return err
 }
 
+// GetRequesterIDFriends function get requestID from relation
 func (repo friendsRepo) GetRequesterIDFriends(ctx context.Context, requesterID int, relationType int) ([]int, error) {
 	var qms []qm.QueryMod
 	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? ", requesterID))
