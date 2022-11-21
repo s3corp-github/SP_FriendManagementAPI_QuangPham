@@ -79,8 +79,11 @@ func (serv FriendService) CreateFriend(ctx context.Context, input CreateRelation
 	}
 
 	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID, utils.FriendRelation)
-	if !isValid || err != nil {
-		return ErrTwoEmailAlreadyFriend
+	if !isValid {
+		return ErrRelationIsExists
+	}
+	if err != nil {
+		return err
 	}
 
 	relationFriendInput := models.UserFriend{
@@ -121,8 +124,8 @@ func (serv FriendService) GetCommonFriends(ctx context.Context, input CommonFrie
 }
 
 // isRelationExist function check friends is exists
-func isRelationExist(ctx context.Context, repo repository.FriendsRepo, requesterID int, addresseeID int, relationType int) (bool, error) {
-	return repo.IsRelationExist(ctx, requesterID, addresseeID, relationType)
+func isRelationExist(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int, relationType int) (bool, error) {
+	return repo.IsRelationExist(ctx, requesterID, targetID, relationType)
 }
 
 // isRelationExist function check valid to create friends

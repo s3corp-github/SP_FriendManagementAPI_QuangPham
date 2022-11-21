@@ -34,7 +34,7 @@ func (_m *IServiceMock) CreateUser(ctx context.Context, input CreateUserInput) (
 	return r0, r1
 }
 
-// GetListUser provides a mock function with given fields: ctx
+// GetUsers provides a mock function with given fields: ctx
 func (_m *IServiceMock) GetUsers(ctx context.Context) ([]UserEmailResponse, error) {
 	ret := _m.Called(ctx)
 

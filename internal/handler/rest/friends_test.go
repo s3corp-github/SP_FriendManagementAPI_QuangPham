@@ -35,19 +35,6 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 			},
 			expCode: http.StatusCreated,
 		},
-		"case input empty requester": {
-			input:   `{"friends":["", "common@example.com"]}`,
-			expBody: "{\"message\":\"Email cannot be empty\"}\n",
-			mockSrcCreateFriend: mockSrcCreateFriend{
-				givenInput: friends.CreateRelationsInput{
-					RequesterEmail: "",
-					TargetEmail:    "common@example.com",
-				},
-				wantCall: true,
-				expErr:   ErrInvalidEmail,
-			},
-			expCode: http.StatusBadRequest,
-		},
 		"case input email invalid": {
 			input:   `{"friends":["andy.com", "common@example.com"]}`,
 			expBody: "{\"message\":\"Invalid email address\"}\n",
@@ -61,7 +48,7 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 			},
 			expCode: http.StatusBadRequest,
 		},
-		"case requester email and addressee email is same": {
+		"case requester email and target email is same": {
 			input:   `{"friends":["common@example.com", "common@example.com"]}`,
 			expBody: "{\"message\":\"Requester email and target email must not be the same\"}\n",
 			mockSrcCreateFriend: mockSrcCreateFriend{
@@ -76,7 +63,7 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 		},
 		"case requester email not exist": {
 			input:   `{"friends":["andy123@example.com", "common@example.com"]}`,
-			expBody: "{\"success\":false}\n",
+			expBody: "{\"message\":\"request email from request is invalid\"}\n",
 			mockSrcCreateFriend: mockSrcCreateFriend{
 				givenInput: friends.CreateRelationsInput{
 					RequesterEmail: "andy123@example.com",
@@ -85,25 +72,13 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 				wantCall: true,
 				expErr:   friends.ErrRequestEmailInvalid,
 			},
-			expCode: http.StatusCreated,
-		},
-		"case unable create friends": {
-			input:   `{"friends":["andy@example.com", "common@example.com"]}`,
-			expBody: "{\"success\":false}\n",
-			mockSrcCreateFriend: mockSrcCreateFriend{
-				givenInput: friends.CreateRelationsInput{
-					RequesterEmail: "andy@example.com",
-					TargetEmail:    "common@example.com",
-				},
-				wantCall: true,
-			},
-			expCode: http.StatusCreated,
+			expCode: http.StatusInternalServerError,
 		},
 	}
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/relations/createfriendrelation",
+			req := httptest.NewRequest(http.MethodPost, "/friends/createfriendrelation",
 				strings.NewReader(tc.input))
 			res := httptest.NewRecorder()
 
@@ -145,12 +120,6 @@ func TestHandler_validateRelationInput(t *testing.T) {
 				TargetEmail:    "common@example.com",
 			},
 		},
-		"email cannot be blank": {
-			input: FriendsRequest{
-				Friends: []string{"", "common@example.com"},
-			},
-			expErr: ErrInvalidEmail,
-		},
 		"invalidEmail": {
 			input: FriendsRequest{
 				Friends: []string{"andyexample.com", "common@example.com"},
@@ -188,12 +157,6 @@ func TestHandler_validateSubAndBlockRelationInput(t *testing.T) {
 				TargetEmail:    "john@example.com",
 			},
 		},
-		"case email cannot be blank": {
-			input: CreateFriendsRequest{
-				Requester: "andy@example.com",
-			},
-			expErr: ErrInvalidEmail,
-		},
 		"case requester email invalidEmail": {
 			input: CreateFriendsRequest{
 				Requester: "andyexample.com",
@@ -201,21 +164,7 @@ func TestHandler_validateSubAndBlockRelationInput(t *testing.T) {
 			},
 			expErr: ErrInvalidEmail,
 		},
-		"case requester email is empty": {
-			input: CreateFriendsRequest{
-				Requester: "",
-				Target:    "john@example.com",
-			},
-			expErr: ErrInvalidEmail,
-		},
-		"case addressee email is empty": {
-			input: CreateFriendsRequest{
-				Requester: "andy@example.com",
-				Target:    "",
-			},
-			expErr: ErrInvalidEmail,
-		},
-		"case addressee email invalidEmail": {
+		"case target email invalidEmail": {
 			input: CreateFriendsRequest{
 				Requester: "andy@example.com",
 				Target:    "johnexample.com",
@@ -310,13 +259,13 @@ func TestHandler_validateRelationCommonInput(t *testing.T) {
 			},
 			expErr: ErrInvalidEmail,
 		},
-		"case addressee email is empty": {
+		"case target email is empty": {
 			input: FriendsRequest{
 				Friends: []string{"andy@example.com", ""},
 			},
 			expErr: ErrInvalidEmail,
 		},
-		"case addressee email invalidEmail": {
+		"case target email invalidEmail": {
 			input: FriendsRequest{
 				Friends: []string{"andy@example.com", "johnexample.com"},
 			},
@@ -387,7 +336,7 @@ func TestHandler_GetAllFriendOfUser(t *testing.T) {
 	type mockSrcGetFriend struct {
 		givenInput friends.GetAllFriendsInput
 		wantCall   bool
-		expResult  friends.FriendListResponse
+		expResult  []string
 		expErr     error
 	}
 	tcs := map[string]struct {
@@ -398,31 +347,15 @@ func TestHandler_GetAllFriendOfUser(t *testing.T) {
 	}{
 		"success": {
 			input:   `{"email":"andy@example.com"}`,
-			expBody: "{\"success\":true,\"friends\":[\"common@example.com\"],\"count\":1}\n",
+			expBody: "[\"common@example.com\"]\n",
 			mockSrcGetFriend: mockSrcGetFriend{
 				givenInput: friends.GetAllFriendsInput{
 					Email: "andy@example.com",
 				},
-				wantCall: true,
-				expResult: friends.FriendListResponse{
-					Success: true,
-					Friends: []string{"common@example.com"},
-					Count:   1,
-				},
+				wantCall:  true,
+				expResult: []string{"common@example.com"},
 			},
 			expCode: http.StatusOK,
-		},
-		"case email input is empty": {
-			input:   `{"email":""}`,
-			expBody: "{\"message\":\"Email cannot be empty\"}\n",
-			mockSrcGetFriend: mockSrcGetFriend{
-				givenInput: friends.GetAllFriendsInput{
-					Email: "",
-				},
-				wantCall: true,
-				expErr:   ErrInvalidEmail,
-			},
-			expCode: http.StatusBadRequest,
 		},
 		"case email input is invalid": {
 			input:   `{"email":"andyexample.com"}`,
@@ -438,16 +371,13 @@ func TestHandler_GetAllFriendOfUser(t *testing.T) {
 		},
 		"case email is not exist": {
 			input:   `{"email":"andy123@example.com"}`,
-			expBody: "{\"success\":true,\"friends\":[],\"count\":0}\n",
+			expBody: "[]\n",
 			mockSrcGetFriend: mockSrcGetFriend{
 				givenInput: friends.GetAllFriendsInput{
 					Email: "andy123@example.com",
 				},
-				wantCall: true,
-				expResult: friends.FriendListResponse{
-					Success: true,
-					Friends: []string{},
-				},
+				wantCall:  true,
+				expResult: []string{},
 			},
 			expCode: http.StatusOK,
 		},
@@ -455,16 +385,16 @@ func TestHandler_GetAllFriendOfUser(t *testing.T) {
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/relations/getfriendfromemail",
+			req := httptest.NewRequest(http.MethodPost, "/friends/friends",
 				strings.NewReader(tc.input))
 			res := httptest.NewRecorder()
 
 			// mock data RelationService
-			mockRelationSv := new(friends.IServiceMock)
-			relationHandler := Handler{friendService: mockRelationSv}
+			mockFriendsSv := new(friends.IServiceMock)
+			relationHandler := Handler{friendService: mockFriendsSv}
 
 			if tc.mockSrcGetFriend.wantCall {
-				mockRelationSv.On("GetAllFriendsOfUser", mock.Anything,
+				mockFriendsSv.On("GetFriends", mock.Anything,
 					tc.mockSrcGetFriend.givenInput).Return(
 					tc.mockSrcGetFriend.expResult, tc.mockSrcGetFriend.expErr)
 			}
@@ -489,7 +419,7 @@ func TestHandler_GetCommonFriend(t *testing.T) {
 	type mockSrcGetCommonFriend struct {
 		givenInput friends.CommonFriendsInput
 		wantCall   bool
-		expResult  friends.FriendListResponse
+		expResult  []string
 		expErr     error
 	}
 	tcs := map[string]struct {
@@ -500,33 +430,16 @@ func TestHandler_GetCommonFriend(t *testing.T) {
 	}{
 		"success": {
 			input:   `{"friends":["andy@example.com", "john@example.com"]}`,
-			expBody: "{\"success\":true,\"friends\":[\"common@example.com\"],\"count\":1}\n",
+			expBody: "[\"common@example.com\"]\n",
 			mockSrcGetCommonFriend: mockSrcGetCommonFriend{
 				givenInput: friends.CommonFriendsInput{
 					RequesterEmail: "andy@example.com",
 					TargetEmail:    "john@example.com",
 				},
-				wantCall: true,
-				expResult: friends.FriendListResponse{
-					Success: true,
-					Friends: []string{"common@example.com"},
-					Count:   1,
-				},
+				wantCall:  true,
+				expResult: []string{"common@example.com"},
 			},
 			expCode: http.StatusOK,
-		},
-		"case email input is empty": {
-			input:   `{"friends":["", "john@example.com"]}`,
-			expBody: "{\"message\":\"Email cannot be empty\"}\n",
-			mockSrcGetCommonFriend: mockSrcGetCommonFriend{
-				givenInput: friends.CommonFriendsInput{
-					RequesterEmail: "",
-					TargetEmail:    "john@example.com",
-				},
-				wantCall: true,
-				expErr:   ErrInvalidEmail,
-			},
-			expCode: http.StatusBadRequest,
 		},
 		"case email input is invalid": {
 			input:   `{"friends":["andyexample.com", "john@example.com"]}`,
@@ -545,7 +458,7 @@ func TestHandler_GetCommonFriend(t *testing.T) {
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/relations/getcommonfriends",
+			req := httptest.NewRequest(http.MethodPost, "/friends/commonfriends",
 				strings.NewReader(tc.input))
 			res := httptest.NewRecorder()
 
@@ -554,7 +467,7 @@ func TestHandler_GetCommonFriend(t *testing.T) {
 			relationHandler := Handler{friendService: mockRelationSv}
 
 			if tc.mockSrcGetCommonFriend.wantCall {
-				mockRelationSv.On("GetCommonFriendList", mock.Anything,
+				mockRelationSv.On("GetCommonFriends", mock.Anything,
 					tc.mockSrcGetCommonFriend.givenInput).Return(
 					tc.mockSrcGetCommonFriend.expResult, tc.mockSrcGetCommonFriend.expErr)
 			}
@@ -580,7 +493,6 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 	type mockSrcCreateSub struct {
 		givenInput friends.CreateRelationsInput
 		wantCall   bool
-		expResult  bool
 		expErr     error
 	}
 
@@ -591,33 +503,19 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 		mockSrcCreateSub mockSrcCreateSub
 	}{
 		"success": {
-			input:   `{"requestor":"andy@example.com", "target":"common@example.com"}`,
+			input:   `{"requester":"andy@example.com", "target":"common@example.com"}`,
 			expBody: "{\"success\":true}\n",
 			mockSrcCreateSub: mockSrcCreateSub{
 				givenInput: friends.CreateRelationsInput{
 					RequesterEmail: "andy@example.com",
 					TargetEmail:    "common@example.com",
 				},
-				wantCall:  true,
-				expResult: true,
+				wantCall: true,
 			},
 			expCode: http.StatusCreated,
 		},
-		"case input empty requester": {
-			input:   `{"requestor":"", "target":"common@example.com"}`,
-			expBody: "{\"message\":\"Email cannot be empty\"}\n",
-			mockSrcCreateSub: mockSrcCreateSub{
-				givenInput: friends.CreateRelationsInput{
-					RequesterEmail: "andy@example.com",
-					TargetEmail:    "common@example.com",
-				},
-				wantCall: true,
-				expErr:   ErrInvalidEmail,
-			},
-			expCode: http.StatusBadRequest,
-		},
 		"case input email invalid": {
-			input:   `{"requestor":"andyexample.com", "target":"common@example.com"}`,
+			input:   `{"requester":"andyexample.com", "target":"common@example.com"}`,
 			expBody: "{\"message\":\"Invalid email address\"}\n",
 			mockSrcCreateSub: mockSrcCreateSub{
 				givenInput: friends.CreateRelationsInput{
@@ -629,8 +527,8 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 			},
 			expCode: http.StatusBadRequest,
 		},
-		"case requester email and addressee email is same": {
-			input:   `{"requestor":"common@example.com", "target":"common@example.com"}`,
+		"case requester email and target email is same": {
+			input:   `{"requester":"common@example.com", "target":"common@example.com"}`,
 			expBody: "{\"message\":\"Requester email and target email must not be the same\"}\n",
 			mockSrcCreateSub: mockSrcCreateSub{
 				givenInput: friends.CreateRelationsInput{
@@ -643,8 +541,8 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 			expCode: http.StatusBadRequest,
 		},
 		"case requester email not exist": {
-			input:   `{"requestor":"andy123@example.com", "target":"common@example.com"}`,
-			expBody: "{\"message\":\"Requester email not exist\"}\n",
+			input:   `{"requester":"andy123@example.com", "target":"common@example.com"}`,
+			expBody: "{\"message\":\"request email from request is invalid\"}\n",
 			mockSrcCreateSub: mockSrcCreateSub{
 				givenInput: friends.CreateRelationsInput{
 					RequesterEmail: "andy123@example.com",
@@ -655,24 +553,11 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 			},
 			expCode: http.StatusInternalServerError,
 		},
-		"case unable create friends": {
-			input:   `{"requestor":"andy123@example.com", "target":"common@example.com"}`,
-			expBody: "{\"success\":false}\n",
-			mockSrcCreateSub: mockSrcCreateSub{
-				givenInput: friends.CreateRelationsInput{
-					RequesterEmail: "andy123@example.com",
-					TargetEmail:    "common@example.com",
-				},
-				wantCall:  true,
-				expResult: false,
-			},
-			expCode: http.StatusCreated,
-		},
 	}
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/relations/createsubscriptionrelation",
+			req := httptest.NewRequest(http.MethodPost, "/friends/createsubscriptionrelation",
 				strings.NewReader(tc.input))
 			res := httptest.NewRecorder()
 
@@ -682,8 +567,7 @@ func TestHandler_CreateSubscriptionRelation(t *testing.T) {
 
 			if tc.mockSrcCreateSub.wantCall {
 				mockRelationSv.On("CreateSubscription", mock.Anything, tc.mockSrcCreateSub.givenInput).
-					Return(
-						tc.mockSrcCreateSub.expResult, tc.mockSrcCreateSub.expErr)
+					Return(tc.mockSrcCreateSub.expErr)
 			}
 			//when
 			handler := http.HandlerFunc(friendsHandler.CreateSubscription)
@@ -706,7 +590,6 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 	type mockSrcCreateBlock struct {
 		givenInput friends.CreateRelationsInput
 		wantCall   bool
-		expResult  bool
 		expErr     error
 	}
 	tcs := map[string]struct {
@@ -716,33 +599,19 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 		mockSrcCreateBlock mockSrcCreateBlock
 	}{
 		"success": {
-			input:   `{"requestor":"andy@example.com", "target":"common@example.com"}`,
+			input:   `{"requester":"andy@example.com", "target":"common@example.com"}`,
 			expBody: "{\"success\":true}\n",
 			mockSrcCreateBlock: mockSrcCreateBlock{
 				givenInput: friends.CreateRelationsInput{
 					RequesterEmail: "andy@example.com",
 					TargetEmail:    "common@example.com",
 				},
-				wantCall:  true,
-				expResult: true,
+				wantCall: true,
 			},
 			expCode: http.StatusCreated,
 		},
-		"case input empty requester": {
-			input:   `{"requestor":"", "target":"common@example.com"}`,
-			expBody: "{\"message\":\"Email cannot be empty\"}\n",
-			mockSrcCreateBlock: mockSrcCreateBlock{
-				givenInput: friends.CreateRelationsInput{
-					RequesterEmail: "",
-					TargetEmail:    "common@example.com",
-				},
-				wantCall: true,
-				expErr:   ErrInvalidEmail,
-			},
-			expCode: http.StatusBadRequest,
-		},
 		"case input email invalid": {
-			input:   `{"requestor":"andyexample.com", "target":"common@example.com"}`,
+			input:   `{"requester":"andyexample.com", "target":"common@example.com"}`,
 			expBody: "{\"message\":\"Invalid email address\"}\n",
 			mockSrcCreateBlock: mockSrcCreateBlock{
 				givenInput: friends.CreateRelationsInput{
@@ -754,8 +623,8 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 			},
 			expCode: http.StatusBadRequest,
 		},
-		"case requester email and addressee email is same": {
-			input:   `{"requestor":"common@example.com", "target":"common@example.com"}`,
+		"case requester email and target email is same": {
+			input:   `{"requester":"common@example.com", "target":"common@example.com"}`,
 			expBody: "{\"message\":\"Requester email and target email must not be the same\"}\n",
 			mockSrcCreateBlock: mockSrcCreateBlock{
 				givenInput: friends.CreateRelationsInput{
@@ -768,8 +637,8 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 			expCode: http.StatusBadRequest,
 		},
 		"case requester email not exist": {
-			input:   `{"requestor":"andy123@example.com", "target":"common@example.com"}`,
-			expBody: "{\"message\":\"Requester email not exist\"}\n",
+			input:   `{"requester":"andy123@example.com", "target":"common@example.com"}`,
+			expBody: "{\"message\":\"request email from request is invalid\"}\n",
 			mockSrcCreateBlock: mockSrcCreateBlock{
 				givenInput: friends.CreateRelationsInput{
 					RequesterEmail: "andy123@example.com",
@@ -780,24 +649,11 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 			},
 			expCode: http.StatusInternalServerError,
 		},
-		"case unable create friend friends": {
-			input:   `{"requestor":"andy123@example.com", "target":"common@example.com"}`,
-			expBody: "{\"success\":false}\n",
-			mockSrcCreateBlock: mockSrcCreateBlock{
-				givenInput: friends.CreateRelationsInput{
-					RequesterEmail: "andy123@example.com",
-					TargetEmail:    "common@example.com",
-				},
-				wantCall:  true,
-				expResult: false,
-			},
-			expCode: http.StatusCreated,
-		},
 	}
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/relations/createblockrelation",
+			req := httptest.NewRequest(http.MethodPost, "/friends/block",
 				strings.NewReader(tc.input))
 			res := httptest.NewRecorder()
 
@@ -806,8 +662,7 @@ func TestHandler_CreateBlockRelation(t *testing.T) {
 			friendsHandler := Handler{friendService: mockRelationSv}
 			if tc.mockSrcCreateBlock.wantCall {
 				mockRelationSv.On("CreateBlock", mock.Anything,
-					tc.mockSrcCreateBlock.givenInput).Return(
-					tc.mockSrcCreateBlock.expResult, tc.mockSrcCreateBlock.expErr)
+					tc.mockSrcCreateBlock.givenInput).Return(tc.mockSrcCreateBlock.expErr)
 			}
 
 			handler := http.HandlerFunc(friendsHandler.CreateBlock)
@@ -830,7 +685,7 @@ func TestHandler_GetEmailReceive(t *testing.T) {
 	type mockSrcGetEmailReceive struct {
 		givenInput friends.EmailReceiveInput
 		wantCall   bool
-		expResult  friends.EmailReceiveResponse
+		expResult  []string
 		expErr     error
 	}
 	tcs := map[string]struct {
@@ -841,35 +696,19 @@ func TestHandler_GetEmailReceive(t *testing.T) {
 	}{
 		"success": {
 			input:   `{"sender":"andy@example.com", "text":"Hello World! lisa@example.com"}`,
-			expBody: "{\"success\":true,\"recipients\":[\"common@example.com\",\"lisa@example.com\"]}\n",
+			expBody: "[\"common@example.com\",\"lisa@example.com\"]\n",
 			mockSrcGetEmailReceive: mockSrcGetEmailReceive{
 				givenInput: friends.EmailReceiveInput{
 					Sender: "andy@example.com",
 					Text:   "Hello World! lisa@example.com",
 				},
 				wantCall: true,
-				expResult: friends.EmailReceiveResponse{
-					Success: true,
-					Recipients: []string{
-						"common@example.com",
-						"lisa@example.com",
-					},
+				expResult: []string{
+					"common@example.com",
+					"lisa@example.com",
 				},
 			},
 			expCode: http.StatusOK,
-		},
-		"case sender email input is empty": {
-			input:   `{"sender":"", "text":"Hello World! lisa@example.com"}`,
-			expBody: "{\"message\":\"Email cannot be empty\"}\n",
-			mockSrcGetEmailReceive: mockSrcGetEmailReceive{
-				givenInput: friends.EmailReceiveInput{
-					Sender: "",
-					Text:   "Hello World! lisa@example.com",
-				},
-				wantCall: true,
-				expErr:   ErrInvalidEmail,
-			},
-			expCode: http.StatusBadRequest,
 		},
 		"case sender email input is invalid": {
 			input:   `{"sender":"andyexample.com", "text":"Hello World! lisa@example.com"}`,
@@ -886,7 +725,7 @@ func TestHandler_GetEmailReceive(t *testing.T) {
 		},
 		"case email is not exist": {
 			input:   `{"sender":"andy123@example.com", "text":"Hello World! lisa@example.com"}`,
-			expBody: "{\"message\":\"Email not exist\"}\n",
+			expBody: "{\"message\":\"request email from request is invalid\"}\n",
 			mockSrcGetEmailReceive: mockSrcGetEmailReceive{
 				givenInput: friends.EmailReceiveInput{
 					Sender: "andy123@example.com",
@@ -901,7 +740,7 @@ func TestHandler_GetEmailReceive(t *testing.T) {
 
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/relations/getemailreceive",
+			req := httptest.NewRequest(http.MethodPost, "/friends/emailreceive",
 				strings.NewReader(tc.input))
 			res := httptest.NewRecorder()
 

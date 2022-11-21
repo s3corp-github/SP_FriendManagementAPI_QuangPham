@@ -4,14 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
 	"github.com/stretchr/testify/require"
 )
 
-var dbURL = "postgresql://root:secret@localhost:5432/friends_management?sslmode=disable"
-var dbDriver = "postgres"
+var dbURL = "postgres://friends-management:@127.0.0.1:5432/friends-management?sslmode=disable"
 
 func TestRepository_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
@@ -21,10 +19,12 @@ func TestRepository_CreateUser(t *testing.T) {
 	}{
 		"success": {
 			input: models.User{
-				Email: "nhutquang23@gmail.com",
+				Name:  "john",
+				Email: "john@example.com",
 			},
 			expResult: models.User{
-				Email: "nhutquang23@gmail.com",
+				Name:  "john",
+				Email: "john@example.com",
 			},
 		},
 	}
@@ -61,14 +61,11 @@ func TestRepository_GetUserByEmail(t *testing.T) {
 		expErr    error
 	}{
 		"success": {
-			input: "andy@example.com",
+			input: "john@example.com",
 			expResult: models.User{
-				Email: "andy@example.com",
+				Name:  "john",
+				Email: "john@example.com",
 			},
-		},
-		"email is empty": {
-			input:  "",
-			expErr: errors.New("Email cannot be empty"),
 		},
 	}
 
@@ -106,9 +103,10 @@ func TestRepository_GetUserByID(t *testing.T) {
 		expErr    error
 	}{
 		"success": {
-			input: 3,
+			input: 1,
 			expResult: models.User{
-				Email: "common@example.com",
+				Name:  "john",
+				Email: "john@example.com",
 			},
 		},
 	}
@@ -145,12 +143,8 @@ func TestRepository_GetUserIDsByEmail(t *testing.T) {
 		expErr    error
 	}{
 		"success": {
-			input:     []string{"andy@example.com"},
+			input:     []string{"john@example.com"},
 			expResult: []int{1},
-		},
-		"emails is null": {
-			input:  []string{},
-			expErr: errors.New("Slice of emails cannot empty"),
 		},
 	}
 

@@ -39,8 +39,8 @@ func (h Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseJson(w, http.StatusCreated, result)
 }
 
-// GetListUser end point to get list users
-func (h Handler) GetListUser(w http.ResponseWriter, r *http.Request) {
+// GetUsers end point to get list users
+func (h Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	result, err := h.userService.GetUsers(r.Context())
 	if err != nil {
 		utils.JsonResponseError(w, err)

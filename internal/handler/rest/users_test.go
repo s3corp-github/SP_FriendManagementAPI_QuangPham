@@ -13,22 +13,25 @@ import (
 
 func TestHandler_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
-		input   string
-		expCode int
-		expBody string
-		expErr  error
+		input      string
+		givenInput users.CreateUserInput
+		expCode    int
+		expBody    string
+		expErr     error
 	}{
 		"success": {
-			input: `{"email":"nhutquang23@gmail.com", "phone":"032548784", "is_active": false}`,
-			expBody: `{"ID":15,"Email":"nhutquang23@gmail.com","Phone":"031544284","IsActive":false}
+			input:      `{"email":"john@gmail.com", "name":"john"}`,
+			givenInput: users.CreateUserInput{Name: "john", Email: "john@gmail.com"},
+			expBody: `{"ID":15,"Email":"john@gmail.com"}
 `,
 			expCode: http.StatusCreated,
 		},
 		"case error email cannot blank": {
-			input:   `{"email":"", "phone":"031544284", "is_active": false}`,
-			expBody: "{\"message\":\"Email cannot be empty\"}\n",
-			expCode: http.StatusBadRequest,
-			expErr:  ErrInvalidName,
+			input:      `{"email":"", "name":""}`,
+			givenInput: users.CreateUserInput{},
+			expBody:    "{\"message\":\"Invalid email address\"}\n",
+			expCode:    http.StatusBadRequest,
+			expErr:     ErrInvalidName,
 		},
 	}
 
@@ -39,7 +42,7 @@ func TestHandler_CreateUser(t *testing.T) {
 		"success": {
 			result: users.UserResponse{
 				ID:    15,
-				Email: "nhutquang23@gmail.com",
+				Email: "john@gmail.com",
 			},
 		},
 		"error name cannot blank": {},
@@ -53,7 +56,7 @@ func TestHandler_CreateUser(t *testing.T) {
 			// mock data UserService
 			mockUserSv := new(users.IServiceMock)
 			userHandler := Handler{userService: mockUserSv}
-			mockUserSv.On("CreateUser", mock.Anything, mock.AnythingOfType("users.CreateUserInput")).Return(
+			mockUserSv.On("CreateUser", mock.Anything, tc.givenInput).Return(
 				tcsMockUserServ[desc].result, tcsMockUserServ[desc].err)
 
 			handler := http.HandlerFunc(userHandler.CreateUser)
@@ -80,8 +83,7 @@ func TestHandler_GetListUser(t *testing.T) {
 		expErr  error
 	}{
 		"success": {
-			expBody: `{"Email":["andy@example.com","john@example.com","common@example.com","lisa@example.com"]}
-`,
+			expBody: "[{\"Email\":\"andy@example.com\",\"Name\":\"andy\"}]\n",
 			expCode: http.StatusOK,
 		},
 	}
@@ -111,7 +113,7 @@ func TestHandler_GetListUser(t *testing.T) {
 			mockUserSv.On("GetUsers", mock.Anything).Return(
 				tcsMockUserServ[desc].result, tcsMockUserServ[desc].err)
 
-			handler := http.HandlerFunc(userHandler.GetListUser)
+			handler := http.HandlerFunc(userHandler.GetUsers)
 			handler.ServeHTTP(res, req)
 
 			// test cases
@@ -136,10 +138,10 @@ func TestHandler_ValidateUserInput(t *testing.T) {
 	}{
 		"success": {
 			input: UsersRequest{
-				Email: "nhutquang23@gmail.com",
+				Email: "john@gmail.com",
 			},
 			expResult: users.CreateUserInput{
-				Email: "nhutquang23@gmail.com",
+				Email: "john@gmail.com",
 			},
 		},
 		"case email cannot be blank": {

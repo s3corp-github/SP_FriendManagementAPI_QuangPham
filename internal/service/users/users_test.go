@@ -12,29 +12,33 @@ import (
 
 func TestService_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
-		input     CreateUserInput
-		expResult UserResponse
-		expErr    error
+		input          CreateUserInput
+		expResult      UserResponse
+		expResultCheck bool
+		expErr         error
 	}{
 		"success": {
 			input: CreateUserInput{
-				Email: "nhutquang23@gmail.com",
+				Email: "john1@gmail.com",
 			},
+			expResultCheck: false,
 			expResult: UserResponse{
 				ID:    15,
-				Email: "nhutquang23@gmail.com",
+				Email: "john1@gmail.com",
 			},
 		},
 	}
 
 	tcMockUserRepo := map[string]struct {
-		result models.User
-		err    error
+		result         models.User
+		expResultCheck bool
+		err            error
 	}{
 		"success": {
+			expResultCheck: false,
 			result: models.User{
 				ID:    15,
-				Email: "nhutquang23@gmail.com",
+				Email: "john1@gmail.com",
 			},
 		},
 	}
@@ -43,6 +47,8 @@ func TestService_CreateUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			mockRepo := new(user.UsersRepoMock)
+			mockRepo.On("CheckEmailIsExist", mock.Anything, mock.Anything).
+				Return(tcMockUserRepo[desc].expResultCheck, tcMockUserRepo[desc].err)
 			mockRepo.On("CreateUser", mock.Anything, mock.Anything).
 				Return(tcMockUserRepo[desc].result, tcMockUserRepo[desc].err)
 
@@ -62,7 +68,7 @@ func TestService_CreateUser(t *testing.T) {
 func TestService_GetAllUser(t *testing.T) {
 	tcs := map[string]struct {
 		expResult     []UserEmailResponse
-		expResultRepo []string
+		expResultRepo models.UserSlice
 		expErr        error
 	}{
 		"success": {
@@ -72,8 +78,11 @@ func TestService_GetAllUser(t *testing.T) {
 					Name:  "andy",
 				},
 			},
-			expResultRepo: []string{
-				"andy@example.com",
+			expResultRepo: models.UserSlice{
+				{
+					Email: "andy@example.com",
+					Name:  "andy",
+				},
 			},
 		},
 	}

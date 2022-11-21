@@ -1,6 +1,4 @@
 # **Project: friend-management**
-ToDo
-
 ### Quick Run Project:
 - Setup: make setup
 - Run app: make run
@@ -49,7 +47,7 @@ ToDo
                 
             }
     3. Create friend connection between 2 email
-        Path: http:/localhost:8080/relations/friend
+        Path: http:/localhost:8080/friends/friend
         Method: Post
         Payload:
             {
@@ -62,8 +60,8 @@ ToDo
             {
                 "success":"true"
             }
-    4. Retreive a list  for an email address
-        Path: http:/localhost:8080/relations/friends
+    4. Retreive a list friend for an email address
+        Path: http:/localhost:8080/friends/friends
         Method: Post
         Payload:
             {
@@ -78,7 +76,7 @@ ToDo
                 "count":1
             }
     5. Retreive common friend list between 2 email address
-        Path: http:/localhost:8080/relations/commonfriends
+        Path: http:/localhost:8080/friends/commonfriends
         Method: Post
         Payload:
             {
@@ -96,7 +94,7 @@ ToDo
                 "count":1
             }
     6. Subcribe to updates from an email
-        Path: http:/localhost:8080/relations/subscription
+        Path: http:/localhost:8080/friends/subscription
         Method: Post
         Payload:
             {
@@ -108,7 +106,7 @@ ToDo
                 "success":true
             }
     7. Block updates from an email
-        Path: http:/localhost:8080/relations/block
+        Path: http:/localhost:8080/friends/block
         Method: Post
         Payload:
             {
@@ -120,7 +118,7 @@ ToDo
                 "success":true
             }
     8. Retrieve all email address can receive update from an email
-        Path: http:/localhost:8080/relations/emailreceive
+        Path: http:/localhost:8080/friends/emailreceive
         Method: Post
         Payload: 
             {

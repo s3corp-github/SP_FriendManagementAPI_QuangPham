@@ -45,7 +45,7 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 			expResult: false,
 			expErr:    errors.New(`models: unable to insert into user_friends: pq: insert or update on table "user_friends" violates foreign key constraint "user_friends_requester_id_fkey"`),
 		},
-		"case missing requester id and addressee id": {
+		"case missing requester id and target id": {
 			input: models.UserFriend{
 				RelationType: null.IntFrom(utils.FriendRelation),
 			},
@@ -84,22 +84,22 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 
 func TestRepository_GetRelationIDs(t *testing.T) {
 	tcs := map[string]struct {
-		requesterId  int
+		requesterID  int
 		relationType int
 		expResult    []int
 		expErr       error
 	}{
 		"success": {
-			requesterId:  1,
+			requesterID:  1,
 			relationType: 1,
 			expResult:    []int{2, 3, 2},
 		},
-		"missing requestId": {
+		"missing requesterID": {
 			relationType: 1,
-			expErr:       errors.New(`requesterId cannot be null`),
+			expErr:       errors.New(`requesterID cannot be null`),
 		},
 		"missing relationType": {
-			requesterId: 1,
+			requesterID: 1,
 			expErr:      errors.New(`relationType cannot be null`),
 		},
 	}
@@ -113,7 +113,7 @@ func TestRepository_GetRelationIDs(t *testing.T) {
 			defer dbConn.Close()
 
 			friendshipRepo := NewFriendsRepository(dbConn)
-			res, err := friendshipRepo.GetRelationIDs(ctx, tc.requesterId, tc.relationType)
+			res, err := friendshipRepo.GetRelationIDs(ctx, tc.requesterID, tc.relationType)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -128,22 +128,22 @@ func TestRepository_GetRelationIDs(t *testing.T) {
 
 func TestRepository_GetRequesterIDRelation(t *testing.T) {
 	tcs := map[string]struct {
-		requesterId  int
+		requesterID  int
 		relationType int
 		expResult    []int
 		expErr       error
 	}{
 		"success": {
-			requesterId:  4,
+			requesterID:  4,
 			relationType: 2,
 			expResult:    []int{2},
 		},
-		"missing requesterId": {
+		"missing requesterID": {
 			relationType: 1,
-			expErr:       errors.New(`requesterId cannot be null`),
+			expErr:       errors.New(`requesterID cannot be null`),
 		},
 		"missing relationType": {
-			requesterId: 1,
+			requesterID: 1,
 			expErr:      errors.New(`relationType cannot be null`),
 		},
 	}
@@ -157,7 +157,7 @@ func TestRepository_GetRequesterIDRelation(t *testing.T) {
 			defer dbConn.Close()
 
 			friendshipRepo := NewFriendsRepository(dbConn)
-			res, err := friendshipRepo.GetRequesterIDFriends(ctx, tc.requesterId, tc.relationType)
+			res, err := friendshipRepo.GetRequesterIDFriends(ctx, tc.requesterID, tc.relationType)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -172,32 +172,32 @@ func TestRepository_GetRequesterIDRelation(t *testing.T) {
 
 func TestRepository_DeleteRelation(t *testing.T) {
 	tcs := map[string]struct {
-		requesterId  int
+		requesterID  int
 		relationType int
-		addresseeId  int
+		targetID     int
 		expResult    error
 		expErr       error
 	}{
 		"success": {
-			requesterId:  4,
-			addresseeId:  2,
+			requesterID:  4,
+			targetID:     2,
 			relationType: 2,
 			expResult:    nil,
 		},
 		"missing relationType": {
-			requesterId: 4,
-			addresseeId: 2,
+			requesterID: 4,
+			targetID:    2,
 			expErr:      errors.New(`relationType cannot be null`),
 		},
-		"missing requesterId": {
-			addresseeId:  2,
+		"missing requesterID": {
+			targetID:     2,
 			relationType: 1,
-			expErr:       errors.New(`requesterId cannot be null`),
+			expErr:       errors.New(`requesterID cannot be null`),
 		},
-		"missing addresseeId": {
-			requesterId:  4,
+		"missing targetID": {
+			requesterID:  4,
 			relationType: 1,
-			expErr:       errors.New(`addresseeId cannot be null`),
+			expErr:       errors.New(`targetID cannot be null`),
 		},
 	}
 
@@ -210,7 +210,7 @@ func TestRepository_DeleteRelation(t *testing.T) {
 			defer dbConn.Close()
 
 			friendshipRepo := NewFriendsRepository(dbConn)
-			err = friendshipRepo.DeleteRelation(ctx, tc.requesterId, tc.addresseeId, tc.relationType)
+			err = friendshipRepo.DeleteRelation(ctx, tc.requesterID, tc.targetID, tc.relationType)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())
@@ -225,44 +225,44 @@ func TestRepository_DeleteRelation(t *testing.T) {
 
 func TestRepository_IsRelationExist(t *testing.T) {
 	tcs := map[string]struct {
-		requesterId  int
+		requesterID  int
 		relationType int
-		addresseeId  int
+		targetID     int
 		expResult    bool
 		expErr       error
 	}{
-		"success friend friends": {
-			requesterId:  2,
-			addresseeId:  3,
+		"success friends": {
+			requesterID:  2,
+			targetID:     3,
 			relationType: 2,
 			expResult:    true,
 		},
 		"success sub friends": {
-			requesterId:  1,
-			addresseeId:  2,
+			requesterID:  1,
+			targetID:     2,
 			relationType: 2,
 			expResult:    true,
 		},
 		"success block friends": {
-			requesterId:  1,
-			addresseeId:  2,
+			requesterID:  1,
+			targetID:     2,
 			relationType: 3,
 			expResult:    true,
 		},
 		"missing relationType": {
-			requesterId: 4,
-			addresseeId: 2,
+			requesterID: 4,
+			targetID:    2,
 			expErr:      errors.New(`relationType cannot be null`),
 		},
-		"missing requesterId": {
-			addresseeId:  2,
+		"missing requesterID": {
+			targetID:     2,
 			relationType: 1,
-			expErr:       errors.New(`requesterId cannot be null`),
+			expErr:       errors.New(`requesterID cannot be null`),
 		},
-		"missing addresseeId": {
-			requesterId:  4,
+		"missing targetID": {
+			requesterID:  4,
 			relationType: 1,
-			expErr:       errors.New(`addresseeId cannot be null`),
+			expErr:       errors.New(`targetID cannot be null`),
 		},
 	}
 
@@ -275,7 +275,7 @@ func TestRepository_IsRelationExist(t *testing.T) {
 			defer dbConn.Close()
 
 			friendshipRepo := NewFriendsRepository(dbConn)
-			result, err := friendshipRepo.IsRelationExist(ctx, tc.requesterId, tc.addresseeId, tc.relationType)
+			result, err := friendshipRepo.IsRelationExist(ctx, tc.requesterID, tc.targetID, tc.relationType)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())

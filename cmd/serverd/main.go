@@ -38,28 +38,27 @@ func initRouter(dbConn *sql.DB) *chi.Mux {
 	router.Use(utils.LogRequest)
 
 	router.Route("/", func(r chi.Router) {
-		r.Mount("/users", usersRouter(handler))
-		r.Mount("/friends", friendsRouter(handler))
+		r.Route("/users", usersRouter(handler))
+		r.Route("/friends", friendsRouter(handler))
 	})
 
 	return router
 }
 
-func usersRouter(userHandler rest.Handler) http.Handler {
-	router := chi.NewRouter()
-	router.Post("/", userHandler.CreateUser)
-	router.Get("/", userHandler.GetListUser)
-	return router
+func usersRouter(h rest.Handler) func(r chi.Router) {
+	return func(r chi.Router) {
+		r.Post("/", h.CreateUser)
+		r.Get("/", h.GetUsers)
+	}
 }
 
-func friendsRouter(friendsHandler rest.Handler) http.Handler {
-	router := chi.NewRouter()
-	router.Post("/friend", friendsHandler.CreateFriends)
-	router.Post("/subscription", friendsHandler.CreateSubscription)
-	router.Post("/block", friendsHandler.CreateBlock)
-	router.Post("/friends", friendsHandler.GetFriends)
-	router.Post("/commonfriends", friendsHandler.GetCommonFriends)
-	router.Post("/emailreceive", friendsHandler.GetEmailReceive)
-
-	return router
+func friendsRouter(h rest.Handler) func(r chi.Router) {
+	return func(r chi.Router) {
+		r.Post("/friend", h.CreateFriends)
+		r.Post("/subscription", h.CreateSubscription)
+		r.Post("/block", h.CreateBlock)
+		r.Post("/friends", h.GetFriends)
+		r.Post("/commonfriends", h.GetCommonFriends)
+		r.Post("/emailreceive", h.GetEmailReceive)
+	}
 }

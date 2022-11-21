@@ -22,19 +22,29 @@ func NewFriendsRepository(db *sql.DB) repository.FriendsRepo {
 }
 
 func (repo friendsRepo) IsRelationExist(ctx context.Context, requesterID int, targetID int, relationType int) (bool, error) {
-	return models.UserFriends(
-		qm.Where(
-			models.UserFriendColumns.RequesterID+" = ? and "+
-				models.UserFriendColumns.TargetID+" = ? and "+
-				models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, relationType,
-		),
-		qm.Or2(
+	if relationType == 1 {
+		return models.UserFriends(
 			qm.Where(
 				models.UserFriendColumns.RequesterID+" = ? and "+
-					models.UserFriendColumns.TargetID+" = ? "+
-					models.UserFriendColumns.RelationType+"= ? ", targetID, requesterID, relationType),
-		),
-	).Exists(ctx, repo.db)
+					models.UserFriendColumns.TargetID+" = ? and "+
+					models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, relationType,
+			),
+			qm.Or2(
+				qm.Where(
+					models.UserFriendColumns.RequesterID+" = ? and "+
+						models.UserFriendColumns.TargetID+" = ? and "+
+						models.UserFriendColumns.RelationType+" = ? ", targetID, requesterID, relationType),
+			),
+		).Exists(ctx, repo.db)
+	} else {
+		return models.UserFriends(
+			qm.Where(
+				models.UserFriendColumns.RequesterID+" = ? and "+
+					models.UserFriendColumns.TargetID+" = ? and "+
+					models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, relationType,
+			),
+		).Exists(ctx, repo.db)
+	}
 }
 
 // CreateUserFriend create new user friends
@@ -48,9 +58,9 @@ func (repo friendsRepo) CreateUserFriend(ctx context.Context, input models.UserF
 	return relation.Insert(ctx, repo.db, boil.Infer())
 }
 
-func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterId int, relationType int) ([]int, error) {
+func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterID int, relationType int) ([]int, error) {
 	var qms []qm.QueryMod
-	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? OR "+models.UserFriendColumns.TargetID+" = ?", requesterId, requesterId))
+	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? OR "+models.UserFriendColumns.TargetID+" = ?", requesterID, requesterID))
 	qms = append(qms, qm.Where(models.UserFriendColumns.RelationType+" = ?", relationType))
 
 	friendRelations, err := models.UserFriends(qms...).All(ctx, repo.db)
@@ -60,7 +70,7 @@ func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterId int, rel
 
 	userIDs := make([]int, len(friendRelations))
 	for idx, o := range friendRelations {
-		if o.RequesterID != requesterId {
+		if o.RequesterID != requesterID {
 			userIDs[idx] = o.RequesterID
 		} else {
 			userIDs[idx] = o.TargetID
@@ -69,19 +79,19 @@ func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterId int, rel
 
 	return userIDs, nil
 }
-func (repo friendsRepo) DeleteRelation(ctx context.Context, requesterId int, addresseeId int, relationType int) error {
+func (repo friendsRepo) DeleteRelation(ctx context.Context, requesterID int, targetID int, relationType int) error {
 	_, err := models.UserFriends(
 		models.UserFriendWhere.RelationType.EQ(null.IntFrom(relationType)),
-		models.UserFriendWhere.RequesterID.EQ(requesterId),
-		models.UserFriendWhere.TargetID.EQ(addresseeId),
+		models.UserFriendWhere.RequesterID.EQ(requesterID),
+		models.UserFriendWhere.TargetID.EQ(targetID),
 	).DeleteAll(ctx, repo.db)
 
 	return err
 }
 
-func (repo friendsRepo) GetRequesterIDFriends(ctx context.Context, requesterId int, relationType int) ([]int, error) {
+func (repo friendsRepo) GetRequesterIDFriends(ctx context.Context, requesterID int, relationType int) ([]int, error) {
 	var qms []qm.QueryMod
-	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? ", requesterId))
+	qms = append(qms, qm.Where(models.UserFriendColumns.RequesterID+" = ? ", requesterID))
 	qms = append(qms, qm.Where(models.UserFriendColumns.RelationType+" = ?", relationType))
 
 	friendRelations, err := models.UserFriends(qms...).All(ctx, repo.db)
@@ -91,7 +101,7 @@ func (repo friendsRepo) GetRequesterIDFriends(ctx context.Context, requesterId i
 
 	userIDs := make([]int, len(friendRelations))
 	for idx, o := range friendRelations {
-		if o.RequesterID != requesterId {
+		if o.RequesterID != requesterID {
 			userIDs[idx] = o.RequesterID
 		} else {
 			userIDs[idx] = o.TargetID
