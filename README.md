@@ -16,7 +16,7 @@
 - Workflow: Request => Handler => Service => Repository => Database
 
 - Three layers model:
-  + internal/handler: Get request from httpRequest, decode, validate, call controllers, write httpResponse
+  + internal/handler: Get request from httpRequest, decode, validate, call service, write httpResponse
   + internal/service: Handle business logic, call repositories
   + internal/repository: Data access layer
 
