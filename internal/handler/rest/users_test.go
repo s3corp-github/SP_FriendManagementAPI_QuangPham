@@ -20,9 +20,9 @@ func TestHandler_CreateUser(t *testing.T) {
 		expErr     error
 	}{
 		"success": {
-			input:      `{"email":"john@gmail.com", "name":"john"}`,
-			givenInput: users.UserEmail{Name: "john", Email: "john@gmail.com"},
-			expBody: `{"ID":15,"Email":"john@gmail.com"}
+			input:      `{"email":"john@example.com", "name":"john"}`,
+			givenInput: users.UserEmail{Name: "john", Email: "john@example.com"},
+			expBody: `{"ID":15,"Email":"john@example.com"}
 `,
 			expCode: http.StatusCreated,
 		},
@@ -42,7 +42,7 @@ func TestHandler_CreateUser(t *testing.T) {
 		"success": {
 			result: users.UserResponse{
 				ID:    15,
-				Email: "john@gmail.com",
+				Email: "john@example.com",
 			},
 		},
 		"error name cannot blank": {},
@@ -138,10 +138,10 @@ func TestHandler_ValidateUserInput(t *testing.T) {
 	}{
 		"success": {
 			input: UsersRequest{
-				Email: "john@gmail.com",
+				Email: "john@example.com",
 			},
 			expResult: users.UserEmail{
-				Email: "john@gmail.com",
+				Email: "john@example.com",
 			},
 		},
 		"case email cannot be blank": {

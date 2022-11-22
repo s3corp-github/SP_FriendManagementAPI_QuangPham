@@ -19,12 +19,12 @@ func TestService_CreateUser(t *testing.T) {
 	}{
 		"success": {
 			input: UserEmail{
-				Email: "john1@gmail.com",
+				Email: "john@example.com",
 			},
 			expResultCheck: false,
 			expResult: UserResponse{
 				ID:    15,
-				Email: "john1@gmail.com",
+				Email: "john@example.com",
 			},
 		},
 	}
@@ -38,7 +38,7 @@ func TestService_CreateUser(t *testing.T) {
 			expResultCheck: false,
 			result: models.User{
 				ID:    15,
-				Email: "john1@gmail.com",
+				Email: "john@example.com",
 			},
 		},
 	}
