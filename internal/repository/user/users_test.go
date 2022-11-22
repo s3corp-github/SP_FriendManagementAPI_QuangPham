@@ -2,15 +2,26 @@ package user
 
 import (
 	"context"
+	"log"
 	"testing"
 
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/config"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
 	"github.com/stretchr/testify/require"
 )
 
-var dbURL = "postgres://friends-management:@127.0.0.1:5432/friends-management?sslmode=disable"
+var dbURL = ""
 
+func init() {
+	config, err := config.LoadConfig("../../../")
+	if err != nil {
+		log.Println("Error load config: ", err)
+	}
+
+	dbURL = config.DBSource
+	log.Println(dbURL)
+}
 func TestRepository_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
 		input     models.User

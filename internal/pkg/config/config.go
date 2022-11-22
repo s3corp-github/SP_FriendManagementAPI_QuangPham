@@ -15,8 +15,6 @@ type Config struct {
 }
 
 const (
-	// EnvPath Path env file
-	EnvPath = "."
 	// ConfigName env file name
 	ConfigName = "app"
 	// ConfigExtension  env file extension
@@ -24,8 +22,8 @@ const (
 )
 
 // LoadConfig config value from env file
-func LoadConfig() (Config, error) {
-	viper.AddConfigPath(EnvPath)
+func LoadConfig(path string) (Config, error) {
+	viper.AddConfigPath(path)
 	viper.SetConfigName(ConfigName)
 	viper.SetConfigType(ConfigExtension)
 
