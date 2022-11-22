@@ -2,26 +2,14 @@ package user
 
 import (
 	"context"
-	"log"
+	"os"
 	"testing"
 
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/config"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
 	"github.com/stretchr/testify/require"
 )
 
-var dbURL = ""
-
-func init() {
-	config, err := config.LoadConfig("../../../")
-	if err != nil {
-		log.Println("Error load config: ", err)
-	}
-
-	dbURL = config.DBSource
-	log.Println(dbURL)
-}
 func TestRepository_CreateUser(t *testing.T) {
 	tcs := map[string]struct {
 		input     models.User
@@ -44,7 +32,7 @@ func TestRepository_CreateUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -85,7 +73,7 @@ func TestRepository_GetUserByEmail(t *testing.T) {
 			ctx := context.Background()
 
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 			//defer dbConn.Exec("DELETE FROM public.users;")
@@ -126,7 +114,7 @@ func TestRepository_GetUserByID(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -163,7 +151,7 @@ func TestRepository_GetUserIDsByEmail(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -214,7 +202,7 @@ func TestRepository_GetListUser(t *testing.T) {
 			ctx := context.Background()
 
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 

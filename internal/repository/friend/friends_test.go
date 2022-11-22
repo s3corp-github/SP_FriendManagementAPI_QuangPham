@@ -2,11 +2,10 @@ package friend
 
 import (
 	"context"
-	"log"
+	"os"
 	"testing"
 
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
-	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/config"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
 	"github.com/volatiletech/null/v8"
@@ -14,18 +13,6 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/stretchr/testify/require"
 )
-
-var dbURL = ""
-
-func init() {
-	config, err := config.LoadConfig("../../../")
-	if err != nil {
-		log.Println("Error load config: ", err)
-	}
-
-	dbURL = config.DBSource
-	log.Println(dbURL)
-}
 
 func TestRepository_CreateFriendRelation(t *testing.T) {
 	tcs := map[string]struct {
@@ -70,7 +57,7 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -120,7 +107,7 @@ func TestRepository_GetRelationIDs(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -164,7 +151,7 @@ func TestRepository_GetRequesterIDRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -217,7 +204,7 @@ func TestRepository_DeleteRelation(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
@@ -282,7 +269,7 @@ func TestRepository_IsRelationExist(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			ctx := context.Background()
 			// Connect DB test
-			dbConn, err := db.ConnectDB(dbURL)
+			dbConn, err := db.ConnectDB(os.Getenv("DB_SOURCE"))
 			require.NoError(t, err)
 			defer dbConn.Close()
 
