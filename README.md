@@ -12,13 +12,13 @@
 - mockery
 - viper
 
-### Project architecture
-- Workflow: Request => Internal/API/Rest => Internal/Controller => Internal/Repository => Database
+### Project structure
+- Workflow: Request => Handler => Service => Repository => Database
 
 - Three layers model:
-  + Internal/API/Rest: Get request from httpRequest, decode, validate, call controllers, write httpResponse
-  + Internal/Controller: Handle business logic, call repositories
-  + Internal/Repository: Data access layer
+  + internal/handler: Get request from httpRequest, decode, validate, call controllers, write httpResponse
+  + internal/service: Handle business logic, call repositories
+  + internal/repository: Data access layer
 
 ### API ENDPOINTS(localhost:8080)
     1. Get List User:
@@ -47,7 +47,7 @@
                 
             }
     3. Create friend connection between 2 email
-        Path: http:/localhost:8080/friends/friend
+        Path: http:/localhost:8080/friends/create
         Method: Post
         Payload:
             {
@@ -61,7 +61,7 @@
                 "success":"true"
             }
     4. Retreive a list friend for an email address
-        Path: http:/localhost:8080/friends/friends
+        Path: http:/localhost:8080/friends/list
         Method: Post
         Payload:
             {

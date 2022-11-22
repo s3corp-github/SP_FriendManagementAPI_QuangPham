@@ -37,8 +37,8 @@ type CreateUserFriendsResponse struct {
 	Success bool `json:"success"`
 }
 
-// CreateFriends end point to create friend
-func (h Handler) CreateFriends(w http.ResponseWriter, r *http.Request) {
+// CreateFriend end point to create friend
+func (h Handler) CreateFriend(w http.ResponseWriter, r *http.Request) {
 	friendsReq := FriendsRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&friendsReq); err != nil {
 		utils.JsonResponseError(w, err)
@@ -107,7 +107,7 @@ func (h Handler) GetCommonFriends(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseJson(w, http.StatusOK, result)
 }
 
-// CreateSubscription end point to create friend
+// CreateSubscription end point to create subscription
 func (h Handler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	friendsReq := CreateFriendsRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&friendsReq); err != nil {
@@ -131,7 +131,7 @@ func (h Handler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// CreateBlock end point to create friend
+// CreateBlock end point to create block
 func (h Handler) CreateBlock(w http.ResponseWriter, r *http.Request) {
 	blockReq := CreateFriendsRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&blockReq); err != nil {
@@ -155,7 +155,7 @@ func (h Handler) CreateBlock(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetEmailReceive end point to create friend
+// GetEmailReceive end point to get email receive
 func (h Handler) GetEmailReceive(w http.ResponseWriter, r *http.Request) {
 	relationReq := EmailReceiveRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&relationReq); err != nil {

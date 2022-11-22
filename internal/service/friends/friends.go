@@ -70,20 +70,20 @@ func (serv FriendService) GetFriends(ctx context.Context, input GetAllFriendsInp
 func (serv FriendService) CreateFriend(ctx context.Context, input CreateRelationsInput) error {
 	requesterUser, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
-		return ErrRequestEmailInvalid
+		return err
 	}
 
 	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
-		return ErrTargetEmailInvalid
+		return err
 	}
 
 	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID, utils.FriendRelation)
-	if !isValid {
-		return ErrRelationIsExists
-	}
 	if err != nil {
 		return err
+	}
+	if !isValid {
+		return ErrRelationIsExists
 	}
 
 	relationFriendInput := models.UserFriend{
@@ -125,11 +125,21 @@ func (serv FriendService) GetCommonFriends(ctx context.Context, input CommonFrie
 
 // isRelationExist function check friends is exists
 func isRelationExist(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int, relationType int) (bool, error) {
-	return repo.IsRelationExist(ctx, requesterID, targetID, relationType)
+	switch relationType {
+	case utils.FriendRelation:
+		return repo.IsFriendRelationExist(ctx, requesterID, targetID)
+	case utils.Subscribe:
+		return repo.IsSubscriptionRelationExist(ctx, requesterID, targetID)
+	case utils.Blocked:
+		return repo.IsBlockRelationExist(ctx, requesterID, targetID)
+	}
+
+	return false, nil
 }
 
 // isRelationExist function check valid to create friends
 func isValidToCreateRelation(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int, relationType int) (bool, error) {
+
 	isExistRelation, err := isRelationExistFunc(ctx, repo, requesterID, targetID, relationType)
 	if err != nil {
 		return false, err
@@ -177,7 +187,6 @@ func (serv FriendService) CreateSubscription(ctx context.Context, input CreateRe
 	if err != nil {
 		return err
 	}
-
 	if !isValid {
 		return ErrTwoEmailInvalidCreateSub
 	}
@@ -207,7 +216,6 @@ func (serv FriendService) CreateBlock(ctx context.Context, input CreateRelations
 	if err != nil {
 		return err
 	}
-
 	if !isValid {
 		return ErrTwoEmailInvalidCreateBlock
 	}

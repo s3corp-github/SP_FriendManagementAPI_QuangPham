@@ -54,10 +54,10 @@ func usersRouter(h rest.Handler) func(r chi.Router) {
 
 func friendsRouter(h rest.Handler) func(r chi.Router) {
 	return func(r chi.Router) {
-		r.Post("/friend", h.CreateFriends)
+		r.Post("/create", h.CreateFriend)
 		r.Post("/subscription", h.CreateSubscription)
 		r.Post("/block", h.CreateBlock)
-		r.Post("/friends", h.GetFriends)
+		r.Post("/list", h.GetFriends)
 		r.Post("/commonfriends", h.GetCommonFriends)
 		r.Post("/emailreceive", h.GetEmailReceive)
 	}

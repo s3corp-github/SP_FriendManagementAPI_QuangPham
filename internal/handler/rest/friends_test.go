@@ -90,7 +90,7 @@ func TestHandler_CreateFriendsRelation(t *testing.T) {
 					tc.mockSrcCreateFriend.givenInput).Return(tc.mockSrcCreateFriend.expErr)
 			}
 
-			handler := http.HandlerFunc(handlers.CreateFriends)
+			handler := http.HandlerFunc(handlers.CreateFriend)
 			handler.ServeHTTP(res, req)
 
 			// test cases

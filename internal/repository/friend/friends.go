@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -21,31 +22,43 @@ func NewFriendsRepository(db *sql.DB) repository.FriendsRepo {
 	}
 }
 
-// IsRelationExist func check if relation 2 emails exists
-func (repo friendsRepo) IsRelationExist(ctx context.Context, requesterID int, targetID int, relationType int) (bool, error) {
-	if relationType == 1 {
-		return models.UserFriends(
+// IsFriendRelationExist func check if 2 emails are friend
+func (repo friendsRepo) IsFriendRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+	return models.UserFriends(
+		qm.Where(
+			models.UserFriendColumns.RequesterID+" = ? and "+
+				models.UserFriendColumns.TargetID+" = ? and "+
+				models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, utils.FriendRelation,
+		),
+		qm.Or2(
 			qm.Where(
 				models.UserFriendColumns.RequesterID+" = ? and "+
 					models.UserFriendColumns.TargetID+" = ? and "+
-					models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, relationType,
-			),
-			qm.Or2(
-				qm.Where(
-					models.UserFriendColumns.RequesterID+" = ? and "+
-						models.UserFriendColumns.TargetID+" = ? and "+
-						models.UserFriendColumns.RelationType+" = ? ", targetID, requesterID, relationType),
-			),
-		).Exists(ctx, repo.db)
-	} else {
-		return models.UserFriends(
-			qm.Where(
-				models.UserFriendColumns.RequesterID+" = ? and "+
-					models.UserFriendColumns.TargetID+" = ? and "+
-					models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, relationType,
-			),
-		).Exists(ctx, repo.db)
-	}
+					models.UserFriendColumns.RelationType+" = ? ", targetID, requesterID, utils.FriendRelation),
+		),
+	).Exists(ctx, repo.db)
+}
+
+// IsSubscriptionRelationExist func check if 2 emails are subscript
+func (repo friendsRepo) IsSubscriptionRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+	return models.UserFriends(
+		qm.Where(
+			models.UserFriendColumns.RequesterID+" = ? and "+
+				models.UserFriendColumns.TargetID+" = ? and "+
+				models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, utils.Subscribe,
+		),
+	).Exists(ctx, repo.db)
+}
+
+// IsBlockRelationExist func check if 2 emails are block
+func (repo friendsRepo) IsBlockRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+	return models.UserFriends(
+		qm.Where(
+			models.UserFriendColumns.RequesterID+" = ? and "+
+				models.UserFriendColumns.TargetID+" = ? and "+
+				models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, utils.Blocked,
+		),
+	).Exists(ctx, repo.db)
 }
 
 // CreateUserFriend create new user friends
