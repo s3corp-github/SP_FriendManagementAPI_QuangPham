@@ -3,6 +3,7 @@ package friends
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
@@ -11,8 +12,7 @@ import (
 )
 
 var (
-	isRelationExistFunc         = isRelationExist
-	isValidToCreateRelationFunc = isValidToCreateRelation
+	emailValidationRegex = "[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})"
 )
 
 // CreateRelationsInput param using for create friends
@@ -72,17 +72,23 @@ func (serv FriendService) CreateFriend(ctx context.Context, input CreateRelation
 	if err != nil {
 		return err
 	}
+	if strings.EqualFold(requesterUser.Email, "") {
+		return ErrRequestEmailInvalid
+	}
 
 	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
 		return err
 	}
+	if strings.EqualFold(targetUser.Email, "") {
+		return ErrRequestEmailInvalid
+	}
 
-	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID, utils.FriendRelation)
+	checkExists, err := checkUserFriendRelation(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID)
 	if err != nil {
 		return err
 	}
-	if !isValid {
+	if !checkExists {
 		return ErrRelationIsExists
 	}
 
@@ -123,48 +129,25 @@ func (serv FriendService) GetCommonFriends(ctx context.Context, input CommonFrie
 	return serv.userRepo.GetEmailsByIDs(ctx, userIds)
 }
 
-// isRelationExist function check friends is exists
-func isRelationExist(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int, relationType int) (bool, error) {
-	switch relationType {
-	case utils.FriendRelation:
-		return repo.IsFriendRelationExist(ctx, requesterID, targetID)
-	case utils.Subscribe:
-		return repo.IsSubscriptionRelationExist(ctx, requesterID, targetID)
-	case utils.Blocked:
-		return repo.IsBlockRelationExist(ctx, requesterID, targetID)
-	}
-
-	return false, nil
-}
-
-// isRelationExist function check valid to create friends
-func isValidToCreateRelation(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int, relationType int) (bool, error) {
-
-	isExistRelation, err := isRelationExistFunc(ctx, repo, requesterID, targetID, relationType)
+// checkUserFriendRelation function check valid to create friends
+func checkUserFriendRelation(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int) (bool, error) {
+	checkExistRelation, err := repo.CheckFriendRelationExist(ctx, requesterID, targetID)
 	if err != nil {
 		return false, err
 	}
 
-	if isExistRelation {
+	if checkExistRelation {
 		return false, ErrRelationIsExists
 	}
 
 	var isValid bool
+	checkRequesterIDBlock, err := repo.CheckBlockRelationExist(ctx, requesterID, targetID)
+	checkTargetIDBlock, err := repo.CheckBlockRelationExist(ctx, targetID, requesterID)
+	if err != nil {
+		return false, err
+	}
 
-	switch relationType {
-	case utils.FriendRelation:
-		isRequesterIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, targetID, utils.Blocked)
-		isTargetIDBlock, err := isRelationExistFunc(ctx, repo, requesterID, targetID, utils.Blocked)
-		if err != nil {
-			return false, err
-		}
-
-		if !isRequesterIDBlock && !isTargetIDBlock {
-			isValid = true
-		}
-	case utils.Subscribe:
-		isValid = true
-	case utils.Blocked:
+	if !checkRequesterIDBlock && !checkTargetIDBlock {
 		isValid = true
 	}
 
@@ -173,27 +156,33 @@ func isValidToCreateRelation(ctx context.Context, repo repository.FriendsRepo, r
 
 // CreateSubscription function create subscription friends
 func (serv FriendService) CreateSubscription(ctx context.Context, input CreateRelationsInput) error {
-	requester, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
+	requesterUser, err := serv.userRepo.GetUserByEmail(ctx, input.RequesterEmail)
 	if err != nil {
 		return err
+	}
+	if strings.EqualFold(requesterUser.Email, "") {
+		return ErrRequestEmailInvalid
 	}
 
-	target, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
+	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
 		return err
+	}
+	if strings.EqualFold(targetUser.Email, "") {
+		return ErrRequestEmailInvalid
 	}
 
-	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requester.ID, target.ID, utils.Subscribe)
+	checkExists, err := serv.friendRepo.CheckSubscriptionRelationExist(ctx, requesterUser.ID, targetUser.ID)
 	if err != nil {
 		return err
 	}
-	if !isValid {
+	if checkExists {
 		return ErrTwoEmailInvalidCreateSub
 	}
 
 	relationFriendInput := models.UserFriend{
-		RequesterID:  requester.ID,
-		TargetID:     target.ID,
+		RequesterID:  requesterUser.ID,
+		TargetID:     targetUser.ID,
 		RelationType: null.IntFrom(utils.Subscribe),
 	}
 
@@ -206,17 +195,23 @@ func (serv FriendService) CreateBlock(ctx context.Context, input CreateRelations
 	if err != nil {
 		return err
 	}
+	if strings.EqualFold(requesterUser.Email, "") {
+		return ErrRequestEmailInvalid
+	}
 
 	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
 		return err
 	}
+	if strings.EqualFold(targetUser.Email, "") {
+		return ErrRequestEmailInvalid
+	}
 
-	isValid, err := isValidToCreateRelationFunc(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID, utils.Blocked)
+	checkExists, err := serv.friendRepo.CheckBlockRelationExist(ctx, requesterUser.ID, targetUser.ID)
 	if err != nil {
 		return err
 	}
-	if !isValid {
+	if checkExists {
 		return ErrTwoEmailInvalidCreateBlock
 	}
 
@@ -330,13 +325,9 @@ func uniqueSlice(intSlice []int) []int {
 
 // findEmailFromText return email mentioned in text
 func findEmailFromText(text string) []string {
-
-	regex := regexp.MustCompile(utils.EmailValidationRegex)
-
+	regex := regexp.MustCompile(emailValidationRegex)
 	emailChain := regex.FindAllString(text, -1)
-
 	emails := make([]string, len(emailChain))
-
 	for index, emailCharacter := range emailChain {
 		emails[index] = emailCharacter
 	}

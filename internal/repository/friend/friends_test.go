@@ -274,7 +274,7 @@ func TestRepository_IsRelationExist(t *testing.T) {
 			defer dbConn.Close()
 
 			friendshipRepo := NewFriendsRepository(dbConn)
-			result, err := friendshipRepo.IsFriendRelationExist(ctx, tc.requesterID, tc.targetID)
+			result, err := friendshipRepo.CheckFriendRelationExist(ctx, tc.requesterID, tc.targetID)
 
 			if tc.expErr != nil {
 				require.EqualError(t, err, tc.expErr.Error())

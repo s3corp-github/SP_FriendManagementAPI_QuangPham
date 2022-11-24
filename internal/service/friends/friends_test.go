@@ -14,65 +14,14 @@ import (
 	"github.com/volatiletech/null/v8"
 )
 
-type mockIsRelation struct {
-	wantCall  bool
-	expResult bool
-	expErr    error
-}
-
-func TestService_IsRelationExist(t *testing.T) {
-
-	tcs := map[string]struct {
-		mockIsRelation mockIsRelation
-		requesterID    int
-		TargetID       int
-		relationType   int
-		isExistMock    bool
-		expResult      bool
-		expErr         error
-	}{
-		"success": {
-			requesterID:  1,
-			TargetID:     3,
-			relationType: 1,
-			isExistMock:  true,
-			expResult:    true,
-		},
-		"case requesterID is 0": {
-			TargetID:     3,
-			relationType: 1,
-			isExistMock:  true,
-			expErr:       errors.New("requesterID cannot be null"),
-		},
-	}
-
-	for desc, tc := range tcs {
-		t.Run(desc, func(t *testing.T) {
-			ctx := context.Background()
-			mockRelationRepo := new(friend.FriendsRepoMock)
-			mockRelationRepo.On("IsFriendRelationExist", mock.Anything, tc.requesterID, tc.TargetID, tc.relationType).
-				Return(tc.isExistMock, tc.expErr)
-
-			res, err := isRelationExist(ctx, mockRelationRepo, tc.requesterID, tc.TargetID, tc.relationType)
-			if tc.expErr != nil {
-				require.EqualError(t, err, tc.expErr.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expResult, res)
-
-			}
-		})
-	}
-
-}
-
 func TestService_CreateFriendRelation(t *testing.T) {
 	tcs := map[string]struct {
 		input                   CreateRelationsInput
 		userRepoExpResultMock1  models.User
 		userRepoExpResultMock2  models.User
 		createRelationInputMock models.UserFriend
-		isExistMock             bool
+		checkFriendMock         bool
+		checkBlockMock          bool
 		expErr                  error
 		expErrEmail             error
 	}{
@@ -81,7 +30,8 @@ func TestService_CreateFriendRelation(t *testing.T) {
 				RequesterEmail: "john@example.com",
 				TargetEmail:    "andy@example.com",
 			},
-			isExistMock: false,
+			checkFriendMock: false,
+			checkBlockMock:  false,
 			userRepoExpResultMock1: models.User{
 				ID:    1,
 				Email: "john@example.com",
@@ -102,7 +52,7 @@ func TestService_CreateFriendRelation(t *testing.T) {
 				RequesterEmail: "john@example.com",
 				TargetEmail:    "andy@example.com",
 			},
-			isExistMock: true,
+			checkFriendMock: true,
 			userRepoExpResultMock1: models.User{
 				ID:    1,
 				Email: "john@example.com",
@@ -131,8 +81,10 @@ func TestService_CreateFriendRelation(t *testing.T) {
 				Return(tc.userRepoExpResultMock2, tc.expErrEmail)
 
 			mockFriendsRepo := new(friend.FriendsRepoMock)
-			mockFriendsRepo.On("IsFriendRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-				Return(tc.isExistMock, tc.expErr)
+			mockFriendsRepo.On("CheckFriendRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(tc.checkFriendMock, tc.expErr)
+			mockFriendsRepo.On("CheckBlockRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(tc.checkBlockMock, tc.expErr)
 			mockFriendsRepo.On("CreateUserFriend", mock.Anything, tc.createRelationInputMock).
 				Return(tc.expErr)
 
@@ -401,7 +353,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 				Return(tc.userRepoExpResultMock2, tc.expErrEmail)
 
 			mockRelationRepo := new(friend.FriendsRepoMock)
-			mockRelationRepo.On("IsFriendRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mockRelationRepo.On("CheckSubscriptionRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockRelationRepo.On("CreateUserFriend", mock.Anything, tc.createRelationInputMock).
 				Return(tc.expErr)
@@ -517,7 +469,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 				Return(tc.userRepoExpResultMock2, tc.expErrEmail)
 
 			mockFriendRepo := new(friend.FriendsRepoMock)
-			mockFriendRepo.On("IsFriendRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mockFriendRepo.On("CheckBlockRelationExist", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(tc.isExistMock, tc.expErr)
 			mockFriendRepo.On("CreateUserFriend", mock.Anything, tc.createRelationInputMock).
 				Return(tc.expErr)

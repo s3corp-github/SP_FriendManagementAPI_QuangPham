@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
-	repository "github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
+	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )

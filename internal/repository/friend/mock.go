@@ -89,7 +89,7 @@ func (_m *FriendsRepoMock) GetRequesterIDFriends(ctx context.Context, requesterI
 }
 
 // IsBlockRelationExist provides a mock function with given fields: ctx, requesterID, targetID
-func (_m *FriendsRepoMock) IsBlockRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+func (_m *FriendsRepoMock) CheckBlockRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
 	ret := _m.Called(ctx, requesterID, targetID)
 
 	var r0 bool
@@ -110,7 +110,7 @@ func (_m *FriendsRepoMock) IsBlockRelationExist(ctx context.Context, requesterID
 }
 
 // IsFriendRelationExist provides a mock function with given fields: ctx, requesterID, targetID
-func (_m *FriendsRepoMock) IsFriendRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+func (_m *FriendsRepoMock) CheckFriendRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
 	ret := _m.Called(ctx, requesterID, targetID)
 
 	var r0 bool
@@ -131,7 +131,7 @@ func (_m *FriendsRepoMock) IsFriendRelationExist(ctx context.Context, requesterI
 }
 
 // IsSubscriptionRelationExist provides a mock function with given fields: ctx, requesterID, targetID
-func (_m *FriendsRepoMock) IsSubscriptionRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+func (_m *FriendsRepoMock) CheckSubscriptionRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
 	ret := _m.Called(ctx, requesterID, targetID)
 
 	var r0 bool

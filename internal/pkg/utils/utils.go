@@ -45,11 +45,11 @@ func JsonResponseError(w http.ResponseWriter, err error) {
 	if _, ok := err.(RespError); !ok {
 		err = InternalServerError(err.Error())
 	}
-	error, _ := err.(RespError)
+	respError, _ := err.(RespError)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(error.Code)
+	w.WriteHeader(respError.Code)
 	res := Response{
-		Message: error.Message,
+		Message: respError.Message,
 	}
 	json.NewEncoder(w).Encode(res)
 }

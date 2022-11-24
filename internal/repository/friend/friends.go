@@ -22,8 +22,8 @@ func NewFriendsRepository(db *sql.DB) repository.FriendsRepo {
 	}
 }
 
-// IsFriendRelationExist func check if 2 emails are friend
-func (repo friendsRepo) IsFriendRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+// CheckFriendRelationExist func check if 2 emails are friend
+func (repo friendsRepo) CheckFriendRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
 	return models.UserFriends(
 		qm.Where(
 			models.UserFriendColumns.RequesterID+" = ? and "+
@@ -39,19 +39,19 @@ func (repo friendsRepo) IsFriendRelationExist(ctx context.Context, requesterID i
 	).Exists(ctx, repo.db)
 }
 
-// IsSubscriptionRelationExist func check if 2 emails are subscript
-func (repo friendsRepo) IsSubscriptionRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+// CheckSubscriptionRelationExist func check if 2 emails are subscript
+func (repo friendsRepo) CheckSubscriptionRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
 	return models.UserFriends(
 		qm.Where(
 			models.UserFriendColumns.RequesterID+" = ? and "+
 				models.UserFriendColumns.TargetID+" = ? and "+
-				models.UserFriendColumns.RelationType+"= ? ", requesterID, targetID, utils.Subscribe,
+				models.UserFriendColumns.RelationType+" = ? ", requesterID, targetID, utils.Subscribe,
 		),
 	).Exists(ctx, repo.db)
 }
 
-// IsBlockRelationExist func check if 2 emails are block
-func (repo friendsRepo) IsBlockRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
+// CheckBlockRelationExist func check if 2 emails are block
+func (repo friendsRepo) CheckBlockRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error) {
 	return models.UserFriends(
 		qm.Where(
 			models.UserFriendColumns.RequesterID+" = ? and "+

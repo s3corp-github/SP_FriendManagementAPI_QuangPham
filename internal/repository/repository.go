@@ -25,11 +25,11 @@ type UsersRepo interface {
 type FriendsRepo interface {
 	CreateUserFriend(ctx context.Context, input models.UserFriend) error
 
-	IsFriendRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error)
+	CheckFriendRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error)
 
-	IsSubscriptionRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error)
+	CheckSubscriptionRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error)
 
-	IsBlockRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error)
+	CheckBlockRelationExist(ctx context.Context, requesterID int, targetID int) (bool, error)
 
 	GetRelationIDs(ctx context.Context, requesterID int, relationType int) ([]int, error)
 
