@@ -67,7 +67,7 @@ func TestService_CreateFriendRelation(t *testing.T) {
 				RelationType: null.IntFrom(utils.FriendRelation),
 			},
 			expErrEmail: nil,
-			expErr:      errors.New("relation is exists"),
+			expErr:      ErrRelationIsExists,
 		},
 	}
 

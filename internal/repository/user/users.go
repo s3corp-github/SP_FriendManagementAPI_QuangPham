@@ -62,12 +62,11 @@ func (repo userRepository) CreateUser(ctx context.Context, user models.User) (mo
 
 // GetUserByEmail get users by email
 func (repo userRepository) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
-	var userResult models.User
-	if err := models.Users(models.UserWhere.Email.EQ(email)).Bind(ctx, repo.db, &userResult); err != nil {
+	user, err := models.Users(models.UserWhere.Email.EQ(email)).One(ctx, repo.db)
+	if err != nil {
 		return models.User{}, err
 	}
-
-	return userResult, nil
+	return *user, nil
 }
 
 // GetUserIDsByEmail function get userIDS by emails

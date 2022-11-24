@@ -3,7 +3,6 @@ package friends
 import (
 	"context"
 	"regexp"
-	"strings"
 
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
@@ -72,16 +71,10 @@ func (serv FriendService) CreateFriend(ctx context.Context, input CreateRelation
 	if err != nil {
 		return err
 	}
-	if strings.EqualFold(requesterUser.Email, "") {
-		return ErrRequestEmailInvalid
-	}
 
 	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
 		return err
-	}
-	if strings.EqualFold(targetUser.Email, "") {
-		return ErrRequestEmailInvalid
 	}
 
 	checkExists, err := checkUserFriendRelation(ctx, serv.friendRepo, requesterUser.ID, targetUser.ID)
@@ -131,27 +124,30 @@ func (serv FriendService) GetCommonFriends(ctx context.Context, input CommonFrie
 
 // checkUserFriendRelation function check valid to create friends
 func checkUserFriendRelation(ctx context.Context, repo repository.FriendsRepo, requesterID int, targetID int) (bool, error) {
-	checkExistRelation, err := repo.CheckFriendRelationExist(ctx, requesterID, targetID)
+	checkExistFriend, err := repo.CheckFriendRelationExist(ctx, requesterID, targetID)
 	if err != nil {
 		return false, err
 	}
 
-	if checkExistRelation {
+	if checkExistFriend {
 		return false, ErrRelationIsExists
 	}
 
-	var isValid bool
 	checkRequesterIDBlock, err := repo.CheckBlockRelationExist(ctx, requesterID, targetID)
+	if err != nil {
+		return false, err
+	}
+
 	checkTargetIDBlock, err := repo.CheckBlockRelationExist(ctx, targetID, requesterID)
 	if err != nil {
 		return false, err
 	}
 
-	if !checkRequesterIDBlock && !checkTargetIDBlock {
-		isValid = true
+	if checkRequesterIDBlock || checkTargetIDBlock {
+		return false, nil
 	}
 
-	return isValid, nil
+	return true, nil
 }
 
 // CreateSubscription function create subscription friends
@@ -160,16 +156,10 @@ func (serv FriendService) CreateSubscription(ctx context.Context, input CreateRe
 	if err != nil {
 		return err
 	}
-	if strings.EqualFold(requesterUser.Email, "") {
-		return ErrRequestEmailInvalid
-	}
 
 	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
 		return err
-	}
-	if strings.EqualFold(targetUser.Email, "") {
-		return ErrRequestEmailInvalid
 	}
 
 	checkExists, err := serv.friendRepo.CheckSubscriptionRelationExist(ctx, requesterUser.ID, targetUser.ID)
@@ -195,16 +185,10 @@ func (serv FriendService) CreateBlock(ctx context.Context, input CreateRelations
 	if err != nil {
 		return err
 	}
-	if strings.EqualFold(requesterUser.Email, "") {
-		return ErrRequestEmailInvalid
-	}
 
 	targetUser, err := serv.userRepo.GetUserByEmail(ctx, input.TargetEmail)
 	if err != nil {
 		return err
-	}
-	if strings.EqualFold(targetUser.Email, "") {
-		return ErrRequestEmailInvalid
 	}
 
 	checkExists, err := serv.friendRepo.CheckBlockRelationExist(ctx, requesterUser.ID, targetUser.ID)
