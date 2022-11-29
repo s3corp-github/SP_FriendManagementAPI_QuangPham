@@ -7,7 +7,6 @@ import (
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -98,7 +97,7 @@ func (repo friendsRepo) GetRelationIDs(ctx context.Context, requesterID int, rel
 // DeleteRelation function delete relation between 2 ids
 func (repo friendsRepo) DeleteRelation(ctx context.Context, requesterID int, targetID int, relationType int) error {
 	_, err := models.UserFriends(
-		models.UserFriendWhere.RelationType.EQ(null.IntFrom(relationType)),
+		models.UserFriendWhere.RelationType.EQ(relationType),
 		models.UserFriendWhere.RequesterID.EQ(requesterID),
 		models.UserFriendWhere.TargetID.EQ(targetID),
 	).DeleteAll(ctx, repo.db)

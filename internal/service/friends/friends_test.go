@@ -11,7 +11,6 @@ import (
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository/user"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/volatiletech/null/v8"
 )
 
 func TestService_CreateFriendRelation(t *testing.T) {
@@ -43,7 +42,7 @@ func TestService_CreateFriendRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  1,
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.FriendRelation),
+				RelationType: utils.FriendRelation,
 			},
 			expErr: nil,
 		},
@@ -64,7 +63,7 @@ func TestService_CreateFriendRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  1,
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.FriendRelation),
+				RelationType: utils.FriendRelation,
 			},
 			expErrEmail: nil,
 			expErr:      ErrRelationIsExists,
@@ -281,7 +280,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  1,
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.Subscribe),
+				RelationType: utils.Subscribe,
 			},
 			expErr: nil,
 		},
@@ -299,7 +298,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  0,
 				TargetID:     4,
-				RelationType: null.IntFrom(utils.Subscribe),
+				RelationType: utils.Subscribe,
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
@@ -316,7 +315,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 			userRepoExpResultMock2: models.User{},
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  3,
-				RelationType: null.IntFrom(utils.FriendRelation),
+				RelationType: utils.FriendRelation,
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
@@ -337,7 +336,7 @@ func TestService_CreateSubscriptionRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  3,
 				TargetID:     4,
-				RelationType: null.IntFrom(utils.Subscribe),
+				RelationType: utils.Subscribe,
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
@@ -398,7 +397,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  1,
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.Blocked),
+				RelationType: utils.Blocked,
 			},
 		},
 		"case requester users not found": {
@@ -415,7 +414,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  0,
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.Blocked),
+				RelationType: utils.Blocked,
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
@@ -432,7 +431,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 			userRepoExpResultMock2: models.User{},
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  1,
-				RelationType: null.IntFrom(utils.Blocked),
+				RelationType: utils.Blocked,
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},
@@ -453,7 +452,7 @@ func TestService_CreateBlockRelation(t *testing.T) {
 			createRelationInputMock: models.UserFriend{
 				RequesterID:  1,
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.Blocked),
+				RelationType: utils.Blocked,
 			},
 			expErr: errors.New("Email cannot be empty"),
 		},

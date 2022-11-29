@@ -27,7 +27,7 @@ type UserFriend struct {
 	ID           int       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	RequesterID  int       `boil:"requester_id" json:"requester_id" toml:"requester_id" yaml:"requester_id"`
 	TargetID     int       `boil:"target_id" json:"target_id" toml:"target_id" yaml:"target_id"`
-	RelationType null.Int  `boil:"relation_type" json:"relation_type,omitempty" toml:"relation_type" yaml:"relation_type,omitempty"`
+	RelationType int  `boil:"relation_type" json:"relation_type,omitempty" toml:"relation_type" yaml:"relation_type,omitempty"`
 	CreatedAt    time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt    time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -155,14 +155,14 @@ var UserFriendWhere = struct {
 	ID           whereHelperint
 	RequesterID  whereHelperint
 	TargetID     whereHelperint
-	RelationType whereHelpernull_Int
+	RelationType whereHelperint
 	CreatedAt    whereHelpertime_Time
 	UpdatedAt    whereHelpertime_Time
 }{
 	ID:           whereHelperint{field: "\"user_friends\".\"id\""},
 	RequesterID:  whereHelperint{field: "\"user_friends\".\"requester_id\""},
 	TargetID:     whereHelperint{field: "\"user_friends\".\"target_id\""},
-	RelationType: whereHelpernull_Int{field: "\"user_friends\".\"relation_type\""},
+	RelationType: whereHelperint{field: "\"user_friends\".\"relation_type\""},
 	CreatedAt:    whereHelpertime_Time{field: "\"user_friends\".\"created_at\""},
 	UpdatedAt:    whereHelpertime_Time{field: "\"user_friends\".\"updated_at\""},
 }

@@ -5,12 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/friendsofgo/errors"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/db"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
-	"github.com/volatiletech/null/v8"
-
-	"github.com/friendsofgo/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,14 +22,14 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 			input: models.UserFriend{
 				RequesterID:  1,
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.FriendRelation),
+				RelationType: utils.FriendRelation,
 			},
 			expResult: true,
 		},
 		"case missing target id": {
 			input: models.UserFriend{
 				RequesterID:  1,
-				RelationType: null.IntFrom(utils.FriendRelation),
+				RelationType: utils.FriendRelation,
 			},
 			expResult: false,
 			expErr:    errors.New(`models: unable to insert into user_friends: pq: insert or update on table "user_friends" violates foreign key constraint "user_friends_target_id_fkey"`),
@@ -39,14 +37,14 @@ func TestRepository_CreateFriendRelation(t *testing.T) {
 		"case missing requester id": {
 			input: models.UserFriend{
 				TargetID:     2,
-				RelationType: null.IntFrom(utils.FriendRelation),
+				RelationType: utils.FriendRelation,
 			},
 			expResult: false,
 			expErr:    errors.New(`models: unable to insert into user_friends: pq: insert or update on table "user_friends" violates foreign key constraint "user_friends_requester_id_fkey"`),
 		},
 		"case missing requester id and target id": {
 			input: models.UserFriend{
-				RelationType: null.IntFrom(utils.FriendRelation),
+				RelationType: utils.FriendRelation,
 			},
 			expResult: false,
 			expErr:    errors.New(`models: unable to insert into user_friends: pq: insert or update on table "user_friends" violates foreign key constraint "user_friends_requester_id_fkey"`),

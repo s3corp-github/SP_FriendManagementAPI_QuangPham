@@ -7,7 +7,6 @@ import (
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/models"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/pkg/utils"
 	"github.com/s3corp-github/SP_FriendManagementAPI_QuangPham/internal/repository"
-	"github.com/volatiletech/null/v8"
 )
 
 var (
@@ -88,7 +87,7 @@ func (serv FriendService) CreateFriend(ctx context.Context, input CreateRelation
 	relationFriendInput := models.UserFriend{
 		RequesterID:  requesterUser.ID,
 		TargetID:     targetUser.ID,
-		RelationType: null.IntFrom(utils.FriendRelation),
+		RelationType: utils.FriendRelation,
 	}
 
 	return serv.friendRepo.CreateUserFriend(ctx, relationFriendInput)
@@ -173,7 +172,7 @@ func (serv FriendService) CreateSubscription(ctx context.Context, input CreateRe
 	relationFriendInput := models.UserFriend{
 		RequesterID:  requesterUser.ID,
 		TargetID:     targetUser.ID,
-		RelationType: null.IntFrom(utils.Subscribe),
+		RelationType: utils.Subscribe,
 	}
 
 	return serv.friendRepo.CreateUserFriend(ctx, relationFriendInput)
@@ -202,7 +201,7 @@ func (serv FriendService) CreateBlock(ctx context.Context, input CreateRelations
 	relationFriendInput := models.UserFriend{
 		RequesterID:  requesterUser.ID,
 		TargetID:     targetUser.ID,
-		RelationType: null.IntFrom(utils.Blocked),
+		RelationType: utils.Blocked,
 	}
 
 	if err = serv.friendRepo.CreateUserFriend(ctx, relationFriendInput); err != nil {
